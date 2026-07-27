@@ -1,0 +1,1002 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>CNC 工程師工具包</title>
+  <link rel="manifest" href="manifest.webmanifest" />
+  <meta name="theme-color" content="#0d1117" id="theme-color-meta" />
+  <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="CNC 工具包" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <script>
+    // 喺 CSS 載入前先套用主題,避免閃爍
+    (function () {
+      var saved = null;
+      try { saved = localStorage.getItem("cnc-theme"); } catch (e) {}
+      var theme = saved || (window.matchMedia && matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark");
+      document.documentElement.dataset.theme = theme;
+    })();
+  </script>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div class="layout">
+    <!-- ============ 側欄導航 ============ -->
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-icon">⚙</div>
+        <div>
+          <h1 data-i18n="brand.title">CNC 工具包</h1>
+          <span data-i18n="brand.sub">工程師計算助手</span>
+        </div>
+      </div>
+      <nav class="nav">
+        <button class="nav-item active" data-tab="milling">🌀 <span data-i18n="nav.milling">銑削計算</span></button>
+        <button class="nav-item" data-tab="turning">🔩 <span data-i18n="nav.turning">車削計算</span></button>
+        <button class="nav-item" data-tab="drilling">🕳️ <span data-i18n="nav.drilling">鑽孔・攻牙</span></button>
+        <button class="nav-item" data-tab="surface">✨ <span data-i18n="nav.surface">表面粗糙度</span></button>
+        <button class="nav-item" data-tab="hardness">💎 <span data-i18n="nav.hardness">硬度換算</span></button>
+        <button class="nav-item" data-tab="convert">📏 <span data-i18n="nav.convert">英寸換算</span></button>
+        <button class="nav-item" data-tab="triangle">📐 <span data-i18n="nav.triangle">直角三角形</span></button>
+        <button class="nav-item" data-tab="fits">🎯 <span data-i18n="nav.fits">公差配合</span></button>
+        <button class="nav-item" data-tab="compare">⚖️ <span data-i18n="nav.compare">參數對比</span></button>
+        <button class="nav-item" data-tab="advisor">🛠️ <span data-i18n="nav.advisor">刀具建議</span></button>
+        <button class="nav-item" data-tab="insert">💠 <span data-i18n="nav.insert">刀片代碼</span></button>
+        <button class="nav-item" data-tab="interp">🔄 <span data-i18n="nav.interp">插補補償</span></button>
+        <button class="nav-item" data-tab="gcode">⌨️ <span data-i18n="nav.gcode">G-code</span></button>
+        <button class="nav-item" data-tab="weight">⚖️ <span data-i18n="nav.weight">材料重量</span></button>
+      </nav>
+      <div class="sidebar-controls">
+        <button id="settings-open">⚙️ <span data-i18n="settings.title">設定</span></button>
+        <button id="theme-toggle" aria-label="Toggle theme">🌙</button>
+      </div>
+      <div class="sidebar-footer" data-i18n="footer">公制單位 · 建議值僅供參考,實際請依刀具商目錄修正</div>
+    </aside>
+
+    <!-- ============ 主內容 ============ -->
+    <main class="content">
+
+      <!-- ======== 銑削計算 ======== -->
+      <section class="tab-panel active" id="tab-milling">
+        <header class="panel-header">
+          <div class="panel-titles">
+            <h2 data-i18n="mill.title">銑削參數計算</h2>
+            <p data-i18n="mill.desc">輸入刀具同切削條件,即時計算轉速、進給、材料移除率、功率同扭矩。</p>
+          </div>
+          <button class="btn-secondary export-btn">📸 <span data-i18n="btn.export">匯出截圖</span></button>
+        </header>
+        <div class="grid-2">
+          <div class="card">
+            <h3 data-i18n="card.input">輸入</h3>
+            <div class="field">
+              <label data-i18n="lbl.material">工件材料</label>
+              <select id="mill-material"></select>
+              <span class="hint" id="mill-vc-hint"></span>
+            </div>
+            <div class="field-row">
+              <div class="field">
+                <label><span data-i18n="lbl.toolDia">刀具直徑 D</span> <em data-ukind="len">mm</em></label>
+                <input type="number" id="mill-d" value="10" min="0" step="any" data-ukind="len">
+              </div>
+              <div class="field">
+                <label><span data-i18n="lbl.flutes">刃數 z</span></label>
+                <input type="number" id="mill-z" value="4" min="1" step="1">
+              </div>
+            </div>
+            <div class="field-row">
+              <div class="field">
+                <label><span data-i18n="lbl.vc">切削速度 vc</span> <em data-ukind="vc">m/min</em></label>
+                <input type="number" id="mill-vc" value="200" min="0" step="any" data-ukind="vc">
+              </div>
+              <div class="field">
+                <label><span data-i18n="lbl.fz">每齒進給 fz</span> <em data-ukind="len">mm</em></label>
+                <input type="number" id="mill-fz" value="0.05" min="0" step="any" data-ukind="len">
+              </div>
+            </div>
+            <div class="field-row">
+              <div class="field">
+                <label><span data-i18n="r.rpm">主軸轉速 n</span> <em>rpm</em></label>
+                <input type="number" id="mill-n" value="6366" min="0" step="any" class="linked">
+              </div>
+              <div class="field">
+                <label><span data-i18n="r.vf">進給速度 vf</span> <em data-ukind="feedRate">mm/min</em></label>
+                <input type="number" id="mill-vf" value="1273" min="0" step="any" data-ukind="feedRate" class="linked">
+              </div>
+            </div>
+            <span class="hint linked-hint" data-i18n="hint.linked">以上參數雙向聯動:輸入任何一個,其餘會自動換算。</span>
+            <div class="field-row">
+              <div class="field">
+                <label><span data-i18n="lbl.ap">軸向切深 ap</span> <em data-ukind="len">mm</em></label>
+                <input type="number" id="mill-ap" value="5" min="0" step="any" data-ukind="len">
+              </div>
+              <div class="field">
+                <label><span data-i18n="lbl.ae">徑向切寬 ae</span> <em data-ukind="len">mm</em></label>
+                <input type="number" id="mill-ae" value="5" min="0" step="any" data-ukind="len">
+              </div>
+            </div>
+            <button class="btn-secondary" id="mill-suggest" data-i18n="mill.suggest">依材料帶入建議值</button>
+          </div>
+          <div class="card">
+            <h3 data-i18n="card.result">結果</h3>
+            <div class="results" id="mill-results"></div>
+            <div class="note" id="mill-note"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ======== 車削計算 ======== -->
+      <section class="tab-panel" id="tab-turning">
+        <header class="panel-header">
+          <div class="panel-titles">
+            <h2 data-i18n="turn.title">車削參數計算</h2>
+            <p data-i18n="turn.desc">計算轉速、材料移除率、切削功率,同埋由進給與刀鼻半徑估算理論表面粗糙度。</p>
+          </div>
+          <button class="btn-secondary export-btn">📸 <span data-i18n="btn.export">匯出截圖</span></button>
+        </header>
+        <div class="grid-2">
+          <div class="card">
+            <h3 data-i18n="card.input">輸入</h3>
+            <div class="field">
+              <label data-i18n="lbl.material">工件材料</label>
+              <select id="turn-material"></select>
+              <span class="hint" id="turn-vc-hint"></span>
+            </div>
+            <div class="field-row">
+              <div class="field">
+                <label><span data-i18n="lbl.workDia">工件直徑 D</span> <em data-ukind="len">mm</em></label>
+                <input type="number" id="turn-d" value="50" min="0" step="any" data-ukind="len">
+              </div>
+              <div class="field">
+                <label><span data-i18n="lbl.vc">切削速度 vc</span> <em data-ukind="vc">m/min</em></label>
+                <input type="number" id="turn-vc" value="200" min="0" step="any" data-ukind="vc">
+              </div>
+            </div>
+            <div class="field-row">
+              <div class="field">
+                <label><span data-i18n="lbl.feedRev">每轉進給 f</span> <em data-ukind="feedRev">mm/rev</em></label>
+                <input type="number" id="turn-f" value="0.2" min="0" step="any" data-ukind="len">
+              </div>
+              <div class="field">
+                <label><span data-i18n="lbl.doc">切深 ap</span> <em data-ukind="len">mm</em></label>
+                <input type="number" id="turn-ap" value="2" min="0" step="any" data-ukind="len">
+              </div>
+            </div>
+            <div class="field-row">
+              <div class="field">
+                <label><span data-i18n="r.rpm">主軸轉速 n</span> <em>rpm</em></label>
+                <input type="number" id="turn-n" value="1273" min="0" step="any" class="linked">
+              </div>
+              <div class="field">
+                <label><span data-i18n="r.vf">進給速度 vf</span> <em data-ukind="feedRate">mm/min</em></label>
+                <input type="number" id="turn-vf" value="255" min="0" step="any" data-ukind="feedRate" class="linked">
+              </div>
+            </div>
+            <span class="hint linked-hint" data-i18n="hint.linked">以上參數雙向聯動:輸入任何一個,其餘會自動換算。</span>
+            <div class="field">
+              <label><span data-i18n="lbl.noseR">刀鼻半徑 rε</span> <em>mm</em></label>
+              <select id="turn-rnose">
+                <option value="0.2">0.2</option>
+                <option value="0.4">0.4</option>
+                <option value="0.8" selected>0.8</option>
+                <option value="1.2">1.2</option>
+                <option value="1.6">1.6</option>
+              </select>
+            </div>
+          </div>
+          <div class="card">
+            <h3 data-i18n="card.result">結果</h3>
+            <div class="results" id="turn-results"></div>
+            <div class="note" id="turn-note"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ======== 鑽孔・攻牙 ======== -->
+      <section class="tab-panel" id="tab-drilling">
+        <header class="panel-header">
+          <div class="panel-titles">
+            <h2 data-i18n="drill.title">鑽孔・攻牙計算</h2>
+            <p data-i18n="drill.desc">鑽孔轉速進給功率計算,以及公制螺紋攻牙底孔直徑速查。</p>
+          </div>
+          <button class="btn-secondary export-btn">📸 <span data-i18n="btn.export">匯出截圖</span></button>
+        </header>
+        <div class="grid-2">
+          <div class="card">
+            <h3 data-i18n="drill.card">鑽孔</h3>
+            <div class="field">
+              <label data-i18n="lbl.material">工件材料</label>
+              <select id="drill-material"></select>
+              <span class="hint" id="drill-vc-hint"></span>
+            </div>
+            <div class="field-row">
+              <div class="field">
+                <label><span data-i18n="lbl.drillDia">鑽頭直徑 D</span> <em data-ukind="len">mm</em></label>
+                <input type="number" id="drill-d" value="8" min="0" step="any" data-ukind="len">
+              </div>
+              <div class="field">
+                <label><span data-i18n="lbl.vc">切削速度 vc</span> <em data-ukind="vc">m/min</em></label>
+                <input type="number" id="drill-vc" value="80" min="0" step="any" data-ukind="vc">
+              </div>
+            </div>
+            <div class="field-row">
+              <div class="field">
+                <label><span data-i18n="lbl.feedRev">每轉進給 f</span> <em data-ukind="feedRev">mm/rev</em></label>
+                <input type="number" id="drill-f" value="0.15" min="0" step="any" data-ukind="len">
+              </div>
+              <div class="field">
+                <label><span data-i18n="lbl.holeDepth">孔深</span> <em data-ukind="len">mm</em></label>
+                <input type="number" id="drill-depth" value="24" min="0" step="any" data-ukind="len">
+              </div>
+            </div>
+            <div class="field-row">
+              <div class="field">
+                <label><span data-i18n="r.rpm">主軸轉速 n</span> <em>rpm</em></label>
+                <input type="number" id="drill-n" value="3183" min="0" step="any" class="linked">
+              </div>
+              <div class="field">
+                <label><span data-i18n="r.vf">進給速度 vf</span> <em data-ukind="feedRate">mm/min</em></label>
+                <input type="number" id="drill-vf" value="477" min="0" step="any" data-ukind="feedRate" class="linked">
+              </div>
+            </div>
+            <span class="hint linked-hint" data-i18n="hint.linked">以上參數雙向聯動:輸入任何一個,其餘會自動換算。</span>
+            <div class="field-row">
+              <div class="field">
+                <label><span data-i18n="lbl.pointAngle">鑽尖角</span> <em>°</em></label>
+                <select id="drill-point">
+                  <option value="118" selected>118°</option>
+                  <option value="135">135°</option>
+                  <option value="140">140°</option>
+                  <option value="90">90°</option>
+                </select>
+              </div>
+              <div class="field">
+                <label><span data-i18n="lbl.peck">啄鑽量 q</span> <em data-ukind="len">mm</em></label>
+                <input type="number" id="drill-peck" value="0" min="0" step="any" data-ukind="len">
+                <span class="hint" data-i18n="hint.peck">0 = 唔啄鑽(一次鑽到底)</span>
+              </div>
+            </div>
+            <div class="field">
+              <label><span data-i18n="lbl.rapid">快移速率</span> <em data-ukind="feedRate">mm/min</em></label>
+              <input type="number" id="drill-rapid" value="10000" min="0" step="any" data-ukind="feedRate">
+            </div>
+            <div class="results" id="drill-results"></div>
+            <div class="note" id="drill-note"></div>
+          </div>
+          <div class="card">
+            <h3 data-i18n="tap.card">攻牙底孔</h3>
+            <div class="field-row">
+              <div class="field">
+                <label data-i18n="tap.standard">螺紋標準</label>
+                <select id="tap-standard">
+                  <option value="metric" data-i18n="tap.std.metric">公制 M</option>
+                  <option value="unc" data-i18n="tap.std.unc">UNC 粗牙</option>
+                  <option value="unf" data-i18n="tap.std.unf">UNF 細牙</option>
+                  <option value="npt" data-i18n="tap.std.npt">NPT 錐管牙</option>
+                </select>
+              </div>
+              <div class="field">
+                <label data-i18n="lbl.threadSize">螺紋規格</label>
+                <select id="tap-size"></select>
+              </div>
+            </div>
+            <div class="field">
+              <label><span data-i18n="lbl.tapRpm">攻牙轉速</span> <em>rpm</em></label>
+              <input type="number" id="tap-rpm" value="500" min="1" step="50">
+            </div>
+            <div class="results" id="tap-results"></div>
+            <div class="note" id="tap-npt-note"></div>
+            <h3 style="margin-top:20px" data-i18n="tap.tableTitle">底孔速查表</h3>
+            <div class="table-wrap">
+              <table id="tap-table">
+                <thead>
+                  <tr>
+                    <th data-i18n="th.size">規格</th>
+                    <th data-i18n="th.pitch">螺距</th>
+                    <th data-i18n="th.cutTap">切削攻牙底孔</th>
+                    <th data-i18n="th.formTap">擠壓攻牙底孔</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ======== 表面粗糙度 ======== -->
+      <section class="tab-panel" id="tab-surface">
+        <header class="panel-header">
+          <div class="panel-titles">
+            <h2 data-i18n="surf.title">表面粗糙度計算</h2>
+            <p data-i18n="surf.desc">由進給同刀鼻半徑估算理論 Ra/Rz;或由目標 Ra 反推最大進給。</p>
+          </div>
+          <button class="btn-secondary export-btn">📸 <span data-i18n="btn.export">匯出截圖</span></button>
+        </header>
+        <div class="grid-2">
+          <div class="card">
+            <h3 data-i18n="surf.card">車削 / 圓鼻刀 Ra</h3>
+            <div class="seg" data-group="surf-mode">
+              <button class="seg-btn active" data-val="ra" data-i18n="seg.byFeed">由進給求 Ra</button>
+              <button class="seg-btn" data-val="feed" data-i18n="seg.byRa">由目標 Ra 反推進給</button>
+            </div>
+            <div class="field-row">
+              <div class="field" id="surf-f-field">
+                <label><span data-i18n="lbl.feedRev">每轉進給 f</span> <em data-ukind="feedRev">mm/rev</em></label>
+                <input type="number" id="surf-f" value="0.2" min="0" step="any" data-ukind="len">
+              </div>
+              <div class="field hidden" id="surf-ra-field">
+                <label><span data-i18n="lbl.targetRa">目標 Ra</span> <em data-ukind="rough">µm</em></label>
+                <input type="number" id="surf-ra-target" value="1.6" min="0" step="any" data-ukind="rough">
+              </div>
+              <div class="field">
+                <label><span data-i18n="lbl.noseR">刀鼻半徑 rε</span> <em>mm</em></label>
+                <select id="surf-rnose">
+                  <option value="0.2">0.2</option>
+                  <option value="0.4">0.4</option>
+                  <option value="0.8" selected>0.8</option>
+                  <option value="1.2">1.2</option>
+                  <option value="1.6">1.6</option>
+                </select>
+              </div>
+            </div>
+            <div class="results" id="surf-results"></div>
+            <div class="note" data-i18n="surf.note">理論值為幾何下限;實際 Ra 一般會高 20–50%。</div>
+          </div>
+          <div class="card">
+            <h3 data-i18n="scallop.card">球刀殘料高度 (Scallop)</h3>
+            <div class="seg" data-group="scallop-mode">
+              <button class="seg-btn active" data-val="height" data-i18n="seg.byStep">由行距求殘料</button>
+              <button class="seg-btn" data-val="step" data-i18n="seg.byScallop">由殘料反推行距</button>
+            </div>
+            <div class="field-row">
+              <div class="field">
+                <label><span data-i18n="lbl.ballDia">球刀直徑 D</span> <em data-ukind="len">mm</em></label>
+                <input type="number" id="scallop-d" value="6" min="0" step="any" data-ukind="len">
+              </div>
+              <div class="field" id="scallop-step-field">
+                <label><span data-i18n="lbl.stepover">行距 stepover</span> <em data-ukind="len">mm</em></label>
+                <input type="number" id="scallop-step" value="0.5" min="0" step="any" data-ukind="len">
+              </div>
+              <div class="field hidden" id="scallop-h-field">
+                <label><span data-i18n="lbl.targetScallop">目標殘料高度</span> <em data-ukind="len">mm</em></label>
+                <input type="number" id="scallop-h-target" value="0.01" min="0" step="any" data-ukind="len">
+              </div>
+            </div>
+            <div class="results" id="scallop-results"></div>
+            <div class="note" data-i18n="scallop.note">殘料高度即係相鄰刀路之間留低嘅波峰高度。</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ======== 硬度換算 ======== -->
+      <section class="tab-panel" id="tab-hardness">
+        <header class="panel-header">
+          <div class="panel-titles">
+            <h2 data-i18n="hard.title">材料硬度換算</h2>
+            <p data-i18n="hard.desc">HRC・HV・HB・HRB 互換,並估算抗拉強度。</p>
+          </div>
+          <button class="btn-secondary export-btn">📸 <span data-i18n="btn.export">匯出截圖</span></button>
+        </header>
+        <div class="grid-2">
+          <div class="card">
+            <h3 data-i18n="card.input">輸入</h3>
+            <div class="field-row">
+              <div class="field">
+                <label data-i18n="lbl.scale">硬度標尺</label>
+                <select id="hard-type">
+                  <option value="hrc" data-i18n="scale.hrc">HRC(洛氏 C)</option>
+                  <option value="hv" data-i18n="scale.hv">HV(維氏)</option>
+                  <option value="hb" data-i18n="scale.hb">HB(布氏)</option>
+                  <option value="hrb" data-i18n="scale.hrb">HRB(洛氏 B)</option>
+                </select>
+              </div>
+              <div class="field">
+                <label data-i18n="lbl.value">數值</label>
+                <input type="number" id="hard-value" value="45" step="1">
+              </div>
+            </div>
+            <div class="results" id="hard-results"></div>
+            <div class="note" data-i18n="hard.note">換算表適用於非奧氏體鋼。</div>
+          </div>
+          <div class="card">
+            <h3 data-i18n="hard.tableTitle">對照表(節錄)</h3>
+            <div class="table-wrap tall">
+              <table id="hard-table">
+                <thead>
+                  <tr><th>HRC</th><th>HV</th><th>HB</th><th id="hard-uts-th">抗拉 MPa</th></tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ======== 英寸換算 ======== -->
+      <section class="tab-panel" id="tab-convert">
+        <header class="panel-header">
+          <div class="panel-titles">
+            <h2 data-i18n="conv.title">英寸 ⇄ 公制換算</h2>
+            <p data-i18n="conv.desc">分數或小數英寸同毫米互換,支援 1 3/8、5/16、0.375 呢啲格式。</p>
+          </div>
+          <button class="btn-secondary export-btn">📸 <span data-i18n="btn.export">匯出截圖</span></button>
+        </header>
+        <div class="grid-2">
+          <div class="card">
+            <h3 data-i18n="conv.card">換算</h3>
+            <div class="field">
+              <label><span data-i18n="lbl.inch">英寸(分數或小數)</span> <em>in</em></label>
+              <input type="text" id="conv-inch" value="1 3/8" autocomplete="off" spellcheck="false">
+              <span class="hint" data-i18n="conv.hint">支援格式:1 3/8、1-3/8、5/16、0.375、25/64(可加 ″ 或 in)</span>
+            </div>
+            <div class="field-row">
+              <div class="field">
+                <label><span data-i18n="lbl.mm">毫米</span> <em>mm</em></label>
+                <input type="number" id="conv-mm" value="34.925" min="0" step="any">
+              </div>
+              <div class="field">
+                <label data-i18n="lbl.fracPrec">分數精度</label>
+                <select id="conv-prec">
+                  <option value="8">1/8</option>
+                  <option value="16">1/16</option>
+                  <option value="32">1/32</option>
+                  <option value="64" selected>1/64</option>
+                </select>
+              </div>
+            </div>
+            <span class="hint linked-hint" data-i18n="hint.linked">以上參數雙向聯動:輸入任何一個,其餘會自動換算。</span>
+            <div class="results" id="conv-results"></div>
+          </div>
+          <div class="card">
+            <h3 data-i18n="conv.tableTitle">分數英寸對照表(至 1″)</h3>
+            <div class="table-wrap tall">
+              <table id="frac-table">
+                <thead>
+                  <tr>
+                    <th data-i18n="th.frac">分數</th>
+                    <th data-i18n="r.inchDec">小數英寸</th>
+                    <th data-i18n="r.mmv">毫米</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ======== 直角三角形 ======== -->
+      <section class="tab-panel" id="tab-triangle">
+        <header class="panel-header">
+          <div class="panel-titles">
+            <h2 data-i18n="tri.title">直角三角形計算</h2>
+            <p data-i18n="tri.desc">輸入任何兩個已知值(至少一條邊),自動求出其餘邊長、角度、面積同周長。</p>
+          </div>
+          <button class="btn-secondary export-btn">📸 <span data-i18n="btn.export">匯出截圖</span></button>
+        </header>
+        <div class="grid-2">
+          <div class="card">
+            <h3 data-i18n="tri.card">已知值(輸入任意兩個)</h3>
+            <div class="tri-stage">
+              <svg viewBox="0 0 500 340" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+                <polygon points="30,290 400,290 400,50" class="tri-shape"/>
+                <polyline points="378,290 378,268 400,268" class="tri-right"/>
+                <path d="M 78 290 A 48 48 0 0 0 71 265" class="tri-arc"/>
+                <path d="M 400 98 A 48 48 0 0 0 372 122" class="tri-arc"/>
+              </svg>
+              <div class="tri-field" style="left:38%; top:34%">
+                <label>c</label>
+                <input type="number" id="tri-c" min="0" step="any">
+                <button class="tri-q" data-key="c">?</button>
+              </div>
+              <div class="tri-field" style="left:84%; top:50%">
+                <label>a</label>
+                <input type="number" id="tri-a" value="30" min="0" step="any">
+                <button class="tri-q" data-key="a">?</button>
+              </div>
+              <div class="tri-field" style="left:43%; top:93%">
+                <label>b</label>
+                <input type="number" id="tri-b" value="40" min="0" step="any">
+                <button class="tri-q" data-key="b">?</button>
+              </div>
+              <div class="tri-field" style="left:27%; top:79%">
+                <label class="tri-ang">A°</label>
+                <input type="number" id="tri-A" min="0" max="90" step="any">
+                <button class="tri-q" data-key="A">?</button>
+              </div>
+              <div class="tri-field" style="left:60%; top:12%">
+                <label class="tri-ang">B°</label>
+                <input type="number" id="tri-B" min="0" max="90" step="any">
+                <button class="tri-q" data-key="B">?</button>
+              </div>
+            </div>
+            <span class="hint" data-i18n="tri.hint">輸入任何兩個已知值(至少一條邊),撳「?」將該欄位設為自動計算。</span>
+            <div class="note" id="tri-note"></div>
+          </div>
+          <div class="card">
+            <h3 data-i18n="card.result">結果</h3>
+            <div class="results" id="tri-results"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ======== 公差配合 ======== -->
+      <section class="tab-panel" id="tab-fits">
+        <header class="panel-header">
+          <div class="panel-titles">
+            <h2 data-i18n="fit.title">極限偏差查詢(ISO 286)</h2>
+            <p data-i18n="fit.desc">輸入稱呼尺寸並揀公差帶(H6、H7、g6 等),查上下極限偏差同極限尺寸。</p>
+          </div>
+          <button class="btn-secondary export-btn">📸 <span data-i18n="btn.export">匯出截圖</span></button>
+        </header>
+        <div class="grid-2">
+          <div class="card">
+            <h3 data-i18n="fit.card">查詢</h3>
+            <div class="field-row">
+              <div class="field">
+                <label><span data-i18n="lbl.nominal">稱呼尺寸</span> <em>mm</em></label>
+                <input type="number" id="fit-d" value="25" min="0" max="500" step="any">
+              </div>
+              <div class="field">
+                <label data-i18n="lbl.fitClass">公差帶</label>
+                <select id="fit-class"></select>
+              </div>
+            </div>
+            <div class="results" id="fit-results"></div>
+            <div class="note" data-i18n="fit.note">依 ISO 286-2;H 孔下偏差 EI=0。</div>
+          </div>
+          <div class="card">
+            <h3 data-i18n="fit.tableTitle">H6–H9 極限偏差對照表(孔,EI=0)</h3>
+            <div class="table-wrap tall">
+              <table id="fit-table">
+                <thead>
+                  <tr>
+                    <th data-i18n="th.range">尺寸範圍 mm</th>
+                    <th>H6</th><th>H7</th><th>H8</th><th>H9</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ======== 參數對比 ======== -->
+      <section class="tab-panel" id="tab-compare">
+        <header class="panel-header">
+          <div class="panel-titles">
+            <h2 data-i18n="cmp.title">銑削參數對比</h2>
+            <p data-i18n="cmp.desc">並排對比兩組切削參數嘅效率、功率同預估刀具壽命變化。</p>
+          </div>
+          <button class="btn-secondary export-btn">📸 <span data-i18n="btn.export">匯出截圖</span></button>
+        </header>
+        <div class="grid-2">
+          <div class="card scheme-a">
+            <h3 data-i18n="cmp.schemeA">方案 A</h3>
+            <div class="compare-inputs" data-scheme="a"></div>
+          </div>
+          <div class="card scheme-b">
+            <h3 data-i18n="cmp.schemeB">方案 B</h3>
+            <div class="compare-inputs" data-scheme="b"></div>
+          </div>
+        </div>
+        <div class="card" style="margin-top:20px">
+          <h3 data-i18n="cmp.resultTitle">對比結果</h3>
+          <div class="field" style="max-width:360px">
+            <label data-i18n="lbl.toolMat">刀具材質(影響 Taylor 壽命指數)</label>
+            <select id="cmp-toolmat">
+              <option value="0.25" selected data-i18n="toolmat.carbide">硬質合金 (n≈0.25)</option>
+              <option value="0.125" data-i18n="toolmat.hss">高速鋼 HSS (n≈0.125)</option>
+              <option value="0.4" data-i18n="toolmat.ceramic">陶瓷 (n≈0.4)</option>
+            </select>
+          </div>
+          <div class="table-wrap">
+            <table id="cmp-table">
+              <thead>
+                <tr>
+                  <th data-i18n="th.item">項目</th>
+                  <th data-i18n="cmp.schemeA">方案 A</th>
+                  <th data-i18n="cmp.schemeB">方案 B</th>
+                  <th data-i18n="th.delta">差異 (B vs A)</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div class="note" data-i18n="cmp.note">刀具壽命比以 Taylor 公式 vc·Tⁿ=C 估算。</div>
+        </div>
+        <div class="card" style="margin-top:20px">
+          <h3 data-i18n="cmp.roiTitle">💰 成本效益 (ROI)</h3>
+          <div class="roi-inputs">
+            <div class="field">
+              <label><span data-i18n="roi.vol">每件去除體積</span> <em>cm³</em></label>
+              <input type="number" id="roi-vol" value="50" min="0" step="any">
+            </div>
+            <div class="field">
+              <label><span data-i18n="roi.rate">機台費率</span> <em>/hr</em></label>
+              <input type="number" id="roi-rate" value="500" min="0" step="any">
+            </div>
+            <div class="field">
+              <label><span data-i18n="roi.life">方案A刀具壽命</span> <em>min</em></label>
+              <input type="number" id="roi-life" value="30" min="0" step="any">
+            </div>
+            <div class="field">
+              <label><span data-i18n="roi.toolcost">每刃刀具成本</span></label>
+              <input type="number" id="roi-toolcost" value="40" min="0" step="any">
+            </div>
+            <div class="field">
+              <label><span data-i18n="roi.qty">批量</span> <em data-i18n="roi.pcs">件</em></label>
+              <input type="number" id="roi-qty" value="100" min="0" step="1">
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table id="roi-table">
+              <thead>
+                <tr>
+                  <th data-i18n="th.item">項目</th>
+                  <th data-i18n="cmp.schemeA">方案 A</th>
+                  <th data-i18n="cmp.schemeB">方案 B</th>
+                  <th data-i18n="th.delta">差異 (B vs A)</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div id="roi-cta" class="roi-cta"></div>
+          <div class="note" data-i18n="roi.note">成本 = 機台工時 + 刀具消耗(依 Taylor 壽命)。數值僅供決策參考,實際依你嘅工時費同刀具單價。</div>
+        </div>
+      </section>
+
+      <!-- ======== 刀具建議 ======== -->
+      <section class="tab-panel" id="tab-advisor">
+        <header class="panel-header">
+          <div class="panel-titles">
+            <h2 data-i18n="adv.title">刀具參數建議</h2>
+            <p data-i18n="adv.desc">揀工件材料同加工類型,提供刀具材質、塗層、幾何、冷卻方式建議。</p>
+          </div>
+          <button class="btn-secondary export-btn">📸 <span data-i18n="btn.export">匯出截圖</span></button>
+        </header>
+        <div class="grid-2">
+          <div class="card">
+            <h3 data-i18n="card.cond">條件</h3>
+            <div class="field">
+              <label data-i18n="lbl.material">工件材料</label>
+              <select id="adv-material"></select>
+            </div>
+            <div class="field-row">
+              <div class="field">
+                <label data-i18n="lbl.opType">加工類型</label>
+                <select id="adv-op">
+                  <option value="milling" data-i18n="op.milling">銑削</option>
+                  <option value="turning" data-i18n="op.turning">車削</option>
+                  <option value="drilling" data-i18n="op.drilling">鑽孔</option>
+                </select>
+              </div>
+              <div class="field">
+                <label><span data-i18n="lbl.toolDia">刀具直徑 D</span> <em data-ukind="len">mm</em></label>
+                <input type="number" id="adv-d" value="10" min="0" step="any" data-ukind="len">
+              </div>
+            </div>
+            <div class="results" id="adv-params"></div>
+          </div>
+          <div class="card">
+            <h3 data-i18n="card.advice">建議</h3>
+            <div id="adv-advice" class="advice"></div>
+            <div id="adv-shop" class="shop-cards"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ======== 刀片 ISO 代碼解讀 ======== -->
+      <section class="tab-panel" id="tab-insert">
+        <header class="panel-header">
+          <div class="panel-titles">
+            <h2 data-i18n="ins.title">刀片 ISO 代碼解讀</h2>
+            <p data-i18n="ins.desc">輸入可轉位刀片 ISO 1832 代碼(例:CNMG120408),解讀形狀、後角、公差、型式、尺寸、刀尖半徑,並附切深同進給建議。</p>
+          </div>
+          <button class="btn-secondary export-btn">📸 <span data-i18n="btn.export">匯出截圖</span></button>
+        </header>
+        <div class="grid-2">
+          <div class="card">
+            <h3 data-i18n="ins.card">刀片代碼</h3>
+            <div class="field">
+              <label><span data-i18n="lbl.insertCode">刀片代碼</span></label>
+              <input type="text" id="insert-code" value="CNMG120408" autocomplete="off" spellcheck="false" style="text-transform:uppercase; letter-spacing:1px">
+              <span class="hint" data-i18n="ins.hint">支援格式:CNMG120408、DCMT11T304、RCMX2006(可含空格或連字號)。撳下面範例快速填入。</span>
+            </div>
+            <div class="field">
+              <label data-i18n="ins.examples">常見範例</label>
+              <div class="chip-row" id="insert-examples"></div>
+            </div>
+            <div class="results" id="insert-results"></div>
+            <div class="note" id="insert-note"></div>
+            <div id="insert-shop" class="shop-cards"></div>
+          </div>
+          <div class="card">
+            <h3 data-i18n="ins.legendCard">代碼位置說明</h3>
+            <div class="table-wrap tall">
+              <table id="insert-table">
+                <thead>
+                  <tr>
+                    <th data-i18n="th.pos">位置</th>
+                    <th data-i18n="th.code">代碼</th>
+                    <th data-i18n="th.meaning">意義</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ======== 圓弧/螺旋插補進給補償 ======== -->
+      <section class="tab-panel" id="tab-interp">
+        <header class="panel-header">
+          <div class="panel-titles">
+            <h2 data-i18n="ip.title">圓弧/螺旋插補進給補償</h2>
+            <p data-i18n="ip.desc">插補鏜孔或走圓弧時,刀具中心圓 ≠ 刀刃接觸圓,程式進給要換算先至維持正確每齒進給。內圓要降、外圓要加。</p>
+          </div>
+          <button class="btn-secondary export-btn">📸 <span data-i18n="btn.export">匯出截圖</span></button>
+        </header>
+        <div class="grid-2">
+          <div class="card">
+            <h3 data-i18n="card.input">輸入</h3>
+            <div class="seg" data-group="ip-mode">
+              <button class="seg-btn active" data-val="internal" data-i18n="ip.internal">內圓(鏜孔/內輪廓)</button>
+              <button class="seg-btn" data-val="external" data-i18n="ip.external">外圓(外輪廓/凸台)</button>
+            </div>
+            <div class="field-row">
+              <div class="field">
+                <label><span data-i18n="lbl.toolDia">刀具直徑 D</span> <em data-ukind="len">mm</em></label>
+                <input type="number" id="ip-dtool" value="10" min="0" step="any" data-ukind="len">
+              </div>
+              <div class="field">
+                <label><span data-i18n="ip.circleDia">目標圓直徑</span> <em data-ukind="len">mm</em></label>
+                <input type="number" id="ip-dcircle" value="30" min="0" step="any" data-ukind="len">
+                <span class="hint" id="ip-circle-hint"></span>
+              </div>
+            </div>
+            <div class="field-row">
+              <div class="field">
+                <label><span data-i18n="r.rpm">主軸轉速 n</span> <em>rpm</em></label>
+                <input type="number" id="ip-n" value="3000" min="0" step="any">
+              </div>
+              <div class="field">
+                <label><span data-i18n="lbl.flutes">刃數 z</span></label>
+                <input type="number" id="ip-z" value="4" min="1" step="1">
+              </div>
+            </div>
+            <div class="field-row">
+              <div class="field">
+                <label><span data-i18n="lbl.fz">每齒進給 fz</span> <em data-ukind="len">mm</em></label>
+                <input type="number" id="ip-fz" value="0.05" min="0" step="any" data-ukind="len">
+              </div>
+              <div class="field">
+                <label><span data-i18n="ip.helixPitch">螺旋導程(每圈)</span> <em data-ukind="len">mm</em></label>
+                <input type="number" id="ip-pitch" value="0" min="0" step="any" data-ukind="len">
+                <span class="hint" data-i18n="ip.helixHint">0 = 純圓弧插補;>0 = 螺旋插補(算斜升角)</span>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <h3 data-i18n="card.result">結果</h3>
+            <div class="results" id="ip-results"></div>
+            <div class="note" id="ip-note"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ======== G-code 產生器 ======== -->
+      <section class="tab-panel" id="tab-gcode">
+        <header class="panel-header">
+          <div class="panel-titles">
+            <h2 data-i18n="gc.title">G-code 產生器</h2>
+            <p data-i18n="gc.desc">揀範式、填參數,即時產生可複製嘅 G-code:鑽孔陣列、螺旋鏜孔、面銑走刀。</p>
+          </div>
+          <button class="btn-secondary export-btn">📸 <span data-i18n="btn.export">匯出截圖</span></button>
+        </header>
+        <div class="grid-2">
+          <div class="card">
+            <h3 data-i18n="gc.card">參數</h3>
+            <div class="seg" data-group="gc-mode">
+              <button class="seg-btn active" data-val="bolt" data-i18n="gc.mode.bolt">鑽孔陣列</button>
+              <button class="seg-btn" data-val="helix" data-i18n="gc.mode.helix">螺旋鏜孔</button>
+              <button class="seg-btn" data-val="face" data-i18n="gc.mode.face">面銑</button>
+            </div>
+            <div id="gcode-params">
+              <div class="field-row">
+                <div class="field"><label><span data-i18n="gc.rpm">主軸轉速 S</span> <em>rpm</em></label><input type="number" id="gc-rpm" value="3000" step="any"></div>
+                <div class="field"><label><span data-i18n="gc.feed">進給 F</span> <em class="gc-ufeed">mm/min</em></label><input type="number" id="gc-feed" value="300" step="any"></div>
+              </div>
+              <div class="field-row">
+                <div class="field"><label><span data-i18n="gc.rPlane">R 平面</span> <em class="gc-ulen">mm</em></label><input type="number" id="gc-rplane" value="2" step="any"></div>
+                <div class="field"><label><span data-i18n="gc.safeZ">安全高度 Z</span> <em class="gc-ulen">mm</em></label><input type="number" id="gc-safez" value="25" step="any"></div>
+              </div>
+
+              <div class="gcode-group" data-mode="bolt">
+                <div class="field-row">
+                  <div class="field"><label><span data-i18n="gc.cx">中心 X</span> <em class="gc-ulen">mm</em></label><input type="number" id="gc-cx" value="0" step="any"></div>
+                  <div class="field"><label><span data-i18n="gc.cy">中心 Y</span> <em class="gc-ulen">mm</em></label><input type="number" id="gc-cy" value="0" step="any"></div>
+                </div>
+                <div class="field-row">
+                  <div class="field"><label><span data-i18n="gc.bcd">節圓直徑</span> <em class="gc-ulen">mm</em></label><input type="number" id="gc-bcd" value="80" step="any"></div>
+                  <div class="field"><label><span data-i18n="gc.holes">孔數</span></label><input type="number" id="gc-holes" value="6" min="1" step="1"></div>
+                </div>
+                <div class="field-row">
+                  <div class="field"><label><span data-i18n="gc.startAng">起始角度</span> <em>°</em></label><input type="number" id="gc-startang" value="0" step="any"></div>
+                  <div class="field"><label><span data-i18n="gc.depth">深度</span> <em class="gc-ulen">mm</em></label><input type="number" id="gc-depth-b" value="10" step="any"></div>
+                </div>
+                <div class="field"><label><span data-i18n="gc.peck">啄鑽量 Q</span> <em class="gc-ulen">mm</em></label><input type="number" id="gc-peck" value="0" min="0" step="any"><span class="hint" data-i18n="gc.peckHint">0 = G81 不啄鑽</span></div>
+              </div>
+
+              <div class="gcode-group hidden" data-mode="helix">
+                <div class="field-row">
+                  <div class="field"><label><span data-i18n="gc.cx">中心 X</span> <em class="gc-ulen">mm</em></label><input type="number" id="gc-hcx" value="0" step="any"></div>
+                  <div class="field"><label><span data-i18n="gc.cy">中心 Y</span> <em class="gc-ulen">mm</em></label><input type="number" id="gc-hcy" value="0" step="any"></div>
+                </div>
+                <div class="field-row">
+                  <div class="field"><label><span data-i18n="gc.bore">孔徑</span> <em class="gc-ulen">mm</em></label><input type="number" id="gc-bore" value="30" step="any"></div>
+                  <div class="field"><label><span data-i18n="gc.tool">刀徑</span> <em class="gc-ulen">mm</em></label><input type="number" id="gc-htool" value="12" step="any"></div>
+                </div>
+                <div class="field-row">
+                  <div class="field"><label><span data-i18n="gc.depth">深度</span> <em class="gc-ulen">mm</em></label><input type="number" id="gc-depth-h" value="15" step="any"></div>
+                  <div class="field"><label><span data-i18n="gc.pitch">螺旋導程</span> <em class="gc-ulen">mm</em></label><input type="number" id="gc-pitch" value="1" min="0.01" step="any"></div>
+                </div>
+              </div>
+
+              <div class="gcode-group hidden" data-mode="face">
+                <div class="field-row">
+                  <div class="field"><label><span data-i18n="gc.x0">起點 X</span> <em class="gc-ulen">mm</em></label><input type="number" id="gc-x0" value="0" step="any"></div>
+                  <div class="field"><label><span data-i18n="gc.y0">起點 Y</span> <em class="gc-ulen">mm</em></label><input type="number" id="gc-y0" value="0" step="any"></div>
+                </div>
+                <div class="field-row">
+                  <div class="field"><label><span data-i18n="gc.width">寬度 W</span> <em class="gc-ulen">mm</em></label><input type="number" id="gc-width" value="100" step="any"></div>
+                  <div class="field"><label><span data-i18n="gc.length">長度 L</span> <em class="gc-ulen">mm</em></label><input type="number" id="gc-length" value="60" step="any"></div>
+                </div>
+                <div class="field-row">
+                  <div class="field"><label><span data-i18n="gc.tool">刀徑</span> <em class="gc-ulen">mm</em></label><input type="number" id="gc-ftool" value="50" step="any"></div>
+                  <div class="field"><label><span data-i18n="gc.stepover">行距 ae</span> <em class="gc-ulen">mm</em></label><input type="number" id="gc-stepover" value="35" step="any"></div>
+                </div>
+                <div class="field"><label><span data-i18n="gc.depth">深度</span> <em class="gc-ulen">mm</em></label><input type="number" id="gc-depth-f" value="1" step="any"></div>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="gcode-out-head">
+              <h3 data-i18n="gc.outCard">G-code 輸出</h3>
+              <button class="btn-secondary" id="gcode-copy" data-i18n="gc.copy">複製</button>
+            </div>
+            <textarea id="gcode-out" class="gcode-out" readonly spellcheck="false"></textarea>
+            <div class="note" data-i18n="gc.note">產生嘅係通用 G-code,請依你機床控制器方言核對,並先空跑驗證。G2/G3 方向依順逆銑同主軸而定。</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ======== 材料重量 / 成本 ======== -->
+      <section class="tab-panel" id="tab-weight">
+        <header class="panel-header">
+          <div class="panel-titles">
+            <h2 data-i18n="wt.title">材料重量 / 成本</h2>
+            <p data-i18n="wt.desc">由胚料形狀尺寸同材料密度計算重量,並依每公斤單價估算材料成本(報價用)。</p>
+          </div>
+          <button class="btn-secondary export-btn">📸 <span data-i18n="btn.export">匯出截圖</span></button>
+        </header>
+        <div class="grid-2">
+          <div class="card">
+            <h3 data-i18n="card.input">輸入</h3>
+            <div class="field-row">
+              <div class="field">
+                <label data-i18n="lbl.material">工件材料</label>
+                <select id="wt-material"></select>
+              </div>
+              <div class="field">
+                <label><span data-i18n="wt.density">密度</span> <em>g/cm³</em></label>
+                <input type="number" id="wt-density" value="7.85" min="0" step="any">
+              </div>
+            </div>
+            <div class="seg" data-group="wt-shape">
+              <button class="seg-btn active" data-val="block" data-i18n="wt.shape.block">方料</button>
+              <button class="seg-btn" data-val="round" data-i18n="wt.shape.round">圓棒</button>
+              <button class="seg-btn" data-val="tube" data-i18n="wt.shape.tube">管料</button>
+            </div>
+            <div class="wt-group" data-shape="block">
+              <div class="field-row">
+                <div class="field"><label><span data-i18n="wt.len">長 L</span> <em data-ukind="len">mm</em></label><input type="number" id="wt-l" value="100" min="0" step="any" data-ukind="len"></div>
+                <div class="field"><label><span data-i18n="wt.wid">寬 W</span> <em data-ukind="len">mm</em></label><input type="number" id="wt-w" value="60" min="0" step="any" data-ukind="len"></div>
+              </div>
+              <div class="field"><label><span data-i18n="wt.hei">高 H</span> <em data-ukind="len">mm</em></label><input type="number" id="wt-h" value="25" min="0" step="any" data-ukind="len"></div>
+            </div>
+            <div class="wt-group hidden" data-shape="round">
+              <div class="field-row">
+                <div class="field"><label><span data-i18n="wt.dia">直徑 D</span> <em data-ukind="len">mm</em></label><input type="number" id="wt-d" value="50" min="0" step="any" data-ukind="len"></div>
+                <div class="field"><label><span data-i18n="wt.length">長度</span> <em data-ukind="len">mm</em></label><input type="number" id="wt-len" value="200" min="0" step="any" data-ukind="len"></div>
+              </div>
+            </div>
+            <div class="wt-group hidden" data-shape="tube">
+              <div class="field-row">
+                <div class="field"><label><span data-i18n="wt.od">外徑 OD</span> <em data-ukind="len">mm</em></label><input type="number" id="wt-od" value="50" min="0" step="any" data-ukind="len"></div>
+                <div class="field"><label><span data-i18n="wt.id">內徑 ID</span> <em data-ukind="len">mm</em></label><input type="number" id="wt-id" value="40" min="0" step="any" data-ukind="len"></div>
+              </div>
+              <div class="field"><label><span data-i18n="wt.length">長度</span> <em data-ukind="len">mm</em></label><input type="number" id="wt-tlen" value="200" min="0" step="any" data-ukind="len"></div>
+            </div>
+            <div class="field-row">
+              <div class="field"><label data-i18n="wt.qty">件數</label><input type="number" id="wt-qty" value="1" min="1" step="1"></div>
+              <div class="field"><label><span data-i18n="wt.cost">每 kg 成本</span> <em class="wt-cur">US$</em></label><input type="number" id="wt-cost" value="0" min="0" step="any"></div>
+            </div>
+          </div>
+          <div class="card">
+            <h3 data-i18n="card.result">結果</h3>
+            <div class="results" id="wt-results"></div>
+            <div class="note" data-i18n="wt.note">重量 = 體積 × 密度。密度可依材料自動帶入,亦可手動修改。成本輸入每公斤單價即估算。</div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- ============ 詢價單(銷售 trigger) ============ -->
+  <button id="inquiry-fab" class="inquiry-fab hidden">🧾 <span data-i18n="cart.button">詢價單</span> <span id="inquiry-count" class="inquiry-count">0</span></button>
+
+  <div class="modal-overlay hidden" id="inquiry-modal">
+    <div class="modal">
+      <div class="modal-head">
+        <h3 data-i18n="cart.title">詢價單</h3>
+        <button id="inquiry-close" aria-label="Close">✕</button>
+      </div>
+      <div id="inquiry-list"></div>
+      <div class="field">
+        <label data-i18n="cart.contactLabel">你的聯絡方式 / 備註</label>
+        <textarea id="inquiry-contact" rows="2" data-i18n-ph="cart.contactPlaceholder" placeholder="公司 / 姓名 / 電話 / 交期"></textarea>
+      </div>
+      <div class="inquiry-actions">
+        <button id="inquiry-wa" class="btn-cta" data-i18n="cart.submitWa">WhatsApp 送出</button>
+        <button id="inquiry-email" class="btn-secondary" data-i18n="cart.submitEmail">Email 送出</button>
+        <button id="inquiry-clear" class="btn-ghost" data-i18n="cart.clear">清空</button>
+      </div>
+      <p class="inquiry-note" data-i18n="cart.note">送出只會開啟 WhatsApp / 郵件撰寫視窗,你可以檢查後先發送。</p>
+    </div>
+  </div>
+
+  <!-- ============ 設定彈窗 ============ -->
+  <div class="modal-overlay hidden" id="settings-modal">
+    <div class="modal">
+      <div class="modal-head">
+        <h3 data-i18n="settings.title">設定</h3>
+        <button id="settings-close" aria-label="Close">✕</button>
+      </div>
+      <div class="field">
+        <label data-i18n="settings.lang">語言</label>
+        <select id="lang-select"></select>
+      </div>
+      <div class="field">
+        <label data-i18n="settings.units">單位系統</label>
+        <div class="seg" id="units-seg">
+          <button class="seg-btn" data-val="metric" data-i18n="units.metric">公制 (mm)</button>
+          <button class="seg-btn" data-val="imperial" data-i18n="units.imperial">英制 (inch)</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/i18n.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/calc.js"></script>
+  <script src="js/export.js"></script>
+  <script src="js/shop.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    // PWA:註冊 Service Worker(只喺 http/https 有效,file:// 唔支援)
+    if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("sw.js").catch(() => {});
+      });
+    }
+  </script>
+</body>
+</html>

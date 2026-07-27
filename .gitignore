@@ -1,0 +1,8 @@
+# macOS
+.DS_Store
+
+# Claude Code 本地設定
+.claude/
+
+# 依賴(此專案無需,保險起見)
+node_modules/
