@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="42" height="42" fill="none" stroke="currentColor" stroke-linecap="butt" stroke-linejoin="miter" role="img" aria-label="CNC 工程師工具包">
+  <path d="M2.8 18 H12.2 V25 H29.2 V29.2 H2.8 Z" stroke-width="1.6"></path>
+  <path d="M12.2 18 V25 H29.2" stroke="var(--accent, #4f8ef7)" stroke-width="2.2"></path>
+  <path d="M12.2 2.5 H21 V25" stroke-width="1.6"></path>
+  <path d="M12.2 2.5 V18" stroke-width="1.6"></path>
+  <path d="M12.2 22.6 L21 18.2 M12.2 18 L21 13.6" stroke-width="1"></path>
+</svg>

@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="96" height="96" fill="none" stroke="currentColor" stroke-linecap="butt" stroke-linejoin="miter" role="img" aria-label="CNC 工程師工具包">
+  <defs><clipPath id="logo-mat"><path d="M2.8 18 H12.2 V25 H29.2 V29.2 H2.8 Z"></path></clipPath></defs>
+  <g clip-path="url(#logo-mat)" stroke-width="0.5" opacity="0.45">
+    <path d="M-6 30 l16 -16 M-2.6 30 l16 -16 M0.8 30 l16 -16 M4.2 30 l16 -16 M7.6 30 l16 -16 M11 30 l16 -16 M14.4 30 l16 -16 M17.8 30 l16 -16 M21.2 30 l16 -16 M24.6 30 l16 -16"></path>
+  </g>
+  <path d="M2.8 18 H12.2 V25 H29.2 V29.2 H2.8 Z" stroke-width="1.2"></path>
+  <path d="M12.2 18 V25 H29.2" stroke="var(--accent, #4f8ef7)" stroke-width="1.7"></path>
+  <path d="M12.2 2.5 H21 V25" stroke-width="1.2"></path>
+  <path d="M12.2 2.5 V18" stroke-width="1.2"></path>
+  <path d="M12.2 9 H21" stroke-width="0.8"></path>
+  <path d="M12.2 23 L21 18.6 M12.2 19 L21 14.6 M12.2 15 L21 10.6" stroke-width="0.7" opacity="0.85"></path>
+  <path d="M16.6 1 V26.5" stroke-width="0.45" stroke-dasharray="2.4 1.6" opacity="0.6"></path>
+  <path d="M22.4 22.6 a 1.6 1.6 0 0 1 2.2 -1.2 M24.4 24.4 a 1.6 1.6 0 0 1 2.2 -1.2" stroke="var(--accent, #4f8ef7)" stroke-width="0.8"></path>
+</svg>

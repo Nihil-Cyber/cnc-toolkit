@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# 提交後自動備份(僅當 app 原始碼有變更)
+ROOT="$(git rev-parse --show-toplevel)"
+"$ROOT/scripts/backup.sh" --auto

@@ -25,14 +25,15 @@ function matchProducts(type, isoGroup, dia) {
 /* ---------- 產品卡渲染 ---------- */
 function productCardHtml(p, badge) {
   const sub = [p.coating, p.note].filter(Boolean).join(" · ");
+  const url = safeUrl(p.url);
   return `
     <div class="product-card">
       <div class="pc-info">
-        <div class="pc-name">${p.name}${badge ? ` <span class="pc-badge">${badge}</span>` : ""}</div>
-        <div class="pc-sub">${sub}${p.sku ? ` · ${p.sku}` : ""}</div>
+        <div class="pc-name">${escapeHtml(p.name)}${badge ? ` <span class="pc-badge">${escapeHtml(badge)}</span>` : ""}</div>
+        <div class="pc-sub">${escapeHtml(sub)}${p.sku ? ` · ${escapeHtml(p.sku)}` : ""}</div>
       </div>
-      ${p.url ? `<a class="pc-link" href="${p.url}" target="_blank" rel="noopener" title="↗">↗</a>` : ""}
-      <button class="pc-add" type="button">${t("shop.add")}</button>
+      ${url ? `<a class="pc-link" href="${escapeHtml(url)}" target="_blank" rel="noopener" title="↗">↗</a>` : ""}
+      <button class="pc-add" type="button">${escapeHtml(t("shop.add"))}</button>
     </div>`;
 }
 
@@ -40,7 +41,7 @@ function productCardHtml(p, badge) {
 function renderProducts(container, list, ctx, badgeFor) {
   if (!list.length) { container.innerHTML = ""; return; }
   container.innerHTML =
-    `<div class="shop-title">${t("shop.forThis")}</div>` +
+    `<div class="shop-title">${escapeHtml(t("shop.forThis"))}</div>` +
     list.map((p) => productCardHtml(p, badgeFor && badgeFor(p))).join("");
   container.querySelectorAll(".pc-add").forEach((btn, i) => {
     btn.addEventListener("click", () => {
@@ -74,15 +75,15 @@ function renderInsertShop(decoded) {
   const code = (document.getElementById("insert-code").value || "").toUpperCase().replace(/[\s\-_.,]/g, "");
 
   // 補貨按鈕:用戶手揸嘅呢粒刀片就係要落單嗰粒
-  let html = `<div class="shop-title">${t("shop.restockTitle")}</div>
-    <button class="pc-restock" type="button">🧾 ${code} — ${t("shop.restock")}</button>`;
+  let html = `<div class="shop-title">${escapeHtml(t("shop.restockTitle"))}</div>
+    <button class="pc-restock" type="button">🧾 ${escapeHtml(code)} — ${escapeHtml(t("shop.restock"))}</button>`;
 
   // 同形狀刀片配對
   const matches = CATALOG.filter((p) =>
     p.type === "insert" && (!decoded.shapeKnown || p.shape === decoded.shape)
   ).slice(0, 3);
   if (matches.length) {
-    html += `<div class="shop-title" style="margin-top:12px">${t("shop.alt")}</div>` +
+    html += `<div class="shop-title" style="margin-top:12px">${escapeHtml(t("shop.alt"))}</div>` +
       matches.map((p) => productCardHtml(p, decoded.shapeKnown && p.shape === decoded.shape ? t("shop.sameShape") : "")).join("");
   }
   box.innerHTML = html;
@@ -134,16 +135,16 @@ function renderInquiryList() {
   const wrap = document.getElementById("inquiry-list");
   if (!wrap) return;
   if (!INQUIRY.length) {
-    wrap.innerHTML = `<p class="inquiry-empty">${t("cart.empty")}</p>`;
+    wrap.innerHTML = `<p class="inquiry-empty">${escapeHtml(t("cart.empty"))}</p>`;
     return;
   }
   wrap.innerHTML = INQUIRY.map((x, i) => `
     <div class="inquiry-row">
       <div>
-        <div class="ir-name">${i + 1}. ${x.name}</div>
-        ${x.ctx ? `<div class="ir-ctx">${x.ctx}</div>` : ""}
+        <div class="ir-name">${i + 1}. ${escapeHtml(x.name)}</div>
+        ${x.ctx ? `<div class="ir-ctx">${escapeHtml(x.ctx)}</div>` : ""}
       </div>
-      <button class="ir-remove" type="button" data-idx="${i}" title="${t("cart.remove")}">✕</button>
+      <button class="ir-remove" type="button" data-idx="${i}" title="${escapeHtml(t("cart.remove"))}">✕</button>
     </div>`).join("");
   wrap.querySelectorAll(".ir-remove").forEach((btn) => {
     btn.addEventListener("click", () => removeFromInquiry(parseInt(btn.dataset.idx, 10)));

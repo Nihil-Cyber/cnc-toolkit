@@ -409,6 +409,28 @@ function fitDeviation(cls, d) {
   return { upper, lower, it };
 }
 
+/** HTML 跳脫:用於 innerHTML 插值防 XSS */
+function escapeHtml(v) {
+  if (v == null) return "";
+  return String(v)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+/** 只允許 http/https 連結(用於 href 屬性) */
+function safeUrl(url) {
+  if (!url || typeof url !== "string") return "";
+  try {
+    const u = new URL(url.trim());
+    return u.protocol === "http:" || u.protocol === "https:" ? u.href : "";
+  } catch (e) {
+    return "";
+  }
+}
+
 /** 數字格式化:自動選有效位數,失敗回傳 "—" */
 function fmt(v, digits = null) {
   if (v == null || !isFinite(v)) return "—";

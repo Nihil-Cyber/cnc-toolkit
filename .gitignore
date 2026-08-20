@@ -6,3 +6,9 @@
 
 # 依賴(此專案無需,保險起見)
 node_modules/
+
+# 備份壓縮包(保留 backups/README.md)
+backups/*.zip
+
+# 備份腳本執行記錄
+scripts/.last-backup

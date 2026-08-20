@@ -52,6 +52,20 @@ function applyStaticI18n() {
     el.placeholder = t(el.dataset.i18nPh);
   });
   $$(".tri-q").forEach((b) => { b.title = t("tri.calcThis"); });
+  applyVersion();
+  updateMobileTitle();
+}
+
+function applyVersion() {
+  const label = t("app.version", { v: APP_META.version });
+  const foot = $("#app-version");
+  const set = $("#settings-version");
+  if (foot) foot.textContent = label;
+  if (set) set.textContent = label;
+}
+
+function versionFooter() {
+  return `${t("footer")} · ${t("app.version", { v: APP_META.version })}`;
 }
 
 /* ---------- 單位系統 ---------- */
@@ -161,7 +175,10 @@ function currentTheme() {
 
 function applyTheme(theme) {
   document.documentElement.dataset.theme = theme;
-  $("#theme-toggle").textContent = theme === "light" ? "🌙" : "☀️";
+  const icon = theme === "light" ? "🌙" : "☀️";
+  $("#theme-toggle").textContent = icon;
+  const mt = $("#mobile-theme");
+  if (mt) mt.textContent = icon;
   // PWA:狀態列顏色跟主題
   const meta = document.getElementById("theme-color-meta");
   if (meta) meta.content = getComputedStyle(document.documentElement).getPropertyValue("--bg").trim() || "#0d1117";
@@ -171,16 +188,86 @@ function applyTheme(theme) {
 $("#theme-toggle").addEventListener("click", () => {
   applyTheme(currentTheme() === "light" ? "dark" : "light");
 });
+$("#mobile-theme")?.addEventListener("click", () => {
+  applyTheme(currentTheme() === "light" ? "dark" : "light");
+});
 
 /* ---------- 設定彈窗 ---------- */
 const settingsModal = $("#settings-modal");
+
+/* ---------- 手機導航 ---------- */
+const navBackdrop = $("#nav-backdrop");
+
+function setMobileNav(open) {
+  document.body.classList.toggle("nav-open", open);
+  const btn = $("#nav-toggle");
+  if (btn) btn.setAttribute("aria-expanded", open ? "true" : "false");
+  if (navBackdrop) navBackdrop.setAttribute("aria-hidden", open ? "false" : "true");
+}
+
+function closeMobileNav() {
+  setMobileNav(false);
+}
+
+function toggleMobileNav() {
+  setMobileNav(!document.body.classList.contains("nav-open"));
+}
+
+function updateMobileTitle() {
+  const active = $(".nav-item.active span");
+  const title = $("#mobile-title");
+  if (active && title) title.textContent = active.textContent;
+}
+
+$("#nav-toggle")?.addEventListener("click", toggleMobileNav);
+navBackdrop?.addEventListener("click", closeMobileNav);
+$("#mobile-settings")?.addEventListener("click", () => {
+  settingsModal.classList.remove("hidden");
+  closeMobileNav();
+});
+
 $("#settings-open").addEventListener("click", () => settingsModal.classList.remove("hidden"));
 $("#settings-close").addEventListener("click", () => settingsModal.classList.add("hidden"));
 settingsModal.addEventListener("click", (e) => {
   if (e.target === settingsModal) settingsModal.classList.add("hidden");
 });
 document.addEventListener("keydown", (e) => {
-  if (e.key === "Escape") settingsModal.classList.add("hidden");
+  if (e.key === "Escape") {
+    settingsModal.classList.add("hidden");
+    changelogModal?.classList.add("hidden");
+    closeMobileNav();
+  }
+});
+
+/* ---------- 更新記錄 ---------- */
+const changelogModal = $("#changelog-modal");
+let changelogText = null;
+
+async function loadChangelog() {
+  if (changelogText != null) return changelogText;
+  try {
+    const res = await fetch("CHANGELOG.md");
+    if (!res.ok) throw new Error("fetch failed");
+    changelogText = await res.text();
+  } catch (e) {
+    changelogText = t("changelog.unavailable");
+  }
+  return changelogText;
+}
+
+async function openChangelog() {
+  const body = $("#changelog-body");
+  if (!body || !changelogModal) return;
+  body.textContent = t("changelog.loading");
+  changelogModal.classList.remove("hidden");
+  settingsModal.classList.add("hidden");
+  body.textContent = await loadChangelog();
+}
+
+$("#changelog-open")?.addEventListener("click", openChangelog);
+$("#changelog-close")?.addEventListener("click", () => changelogModal?.classList.add("hidden"));
+changelogModal?.addEventListener("click", (e) => {
+  if (e.target === changelogModal) changelogModal.classList.add("hidden");
 });
 
 $$("#units-seg .seg-btn").forEach((btn) => {
@@ -206,7 +293,7 @@ langSelect.addEventListener("input", () => {
 /* ---------- 匯出截圖 ---------- */
 $$(".export-btn").forEach((btn) => {
   btn.addEventListener("click", () => {
-    exportActivePanel(t("app.title"), t("footer"), LANG);
+    exportActivePanel(t("app.title"), versionFooter(), LANG);
   });
 });
 
@@ -217,6 +304,8 @@ $$(".nav-item").forEach((btn) => {
     $$(".tab-panel").forEach((p) => p.classList.remove("active"));
     btn.classList.add("active");
     $("#tab-" + btn.dataset.tab).classList.add("active");
+    closeMobileNav();
+    updateMobileTitle();
   });
 });
 
@@ -263,8 +352,8 @@ function renderResults(container, items) {
     .map(
       (it) => `
       <div class="result-item${it.primary ? " primary" : ""}">
-        <span class="rlabel">${it.label}</span>
-        <span class="rvalue">${it.value}</span><span class="runit">${it.unit || ""}</span>
+        <span class="rlabel">${escapeHtml(it.label)}</span>
+        <span class="rvalue">${escapeHtml(it.value)}</span><span class="runit">${escapeHtml(it.unit || "")}</span>
       </div>`
     )
     .join("");
@@ -532,9 +621,9 @@ function renderTapTable() {
   tbody.innerHTML = threadList(tapStd).map((th) => {
     const pitchCell = th.imperial ? `${th.tpi} TPI` : th.p;
     if (th.tapered) {
-      return `<tr><td>${th.name}</td><td>${pitchCell}</td><td>Ø${fmt(toDisp(th.drill, "len"), dDigits)}</td><td>—</td></tr>`;
+      return `<tr><td>${escapeHtml(th.name)}</td><td>${escapeHtml(pitchCell)}</td><td>Ø${fmt(toDisp(th.drill, "len"), dDigits)}</td><td>—</td></tr>`;
     }
-    return `<tr><td>${th.name}</td><td>${pitchCell}</td>
+    return `<tr><td>${escapeHtml(th.name)}</td><td>${escapeHtml(pitchCell)}</td>
       <td>Ø${fmt(toDisp(tapDrillCutting(th.d, th.p), "len"), dDigits)}</td>
       <td>Ø${fmt(toDisp(tapDrillForming(th.d, th.p), "len"), dDigits)}</td></tr>`;
   }).join("");
@@ -639,12 +728,16 @@ function updateHardness() {
 
 function renderHardnessTable() {
   const tbody = $("#hard-table tbody");
-  tbody.innerHTML = HARDNESS_TABLE.map(
+  const rows = typeof HARDNESS_EXTENDED !== "undefined" ? HARDNESS_EXTENDED : HARDNESS_TABLE.map((r) => [r[0], r[1], r[2], null, null, null, null, r[3]]);
+  tbody.innerHTML = rows.map(
     (row) => `<tr data-hrc="${row[0]}">
-      <td>${row[0]}</td>
-      <td>${row[1] ?? "—"}</td>
-      <td>${row[2] ?? "—"}</td>
-      <td>${row[3] != null ? fmt(toDisp(row[3], "stress"), 0) : "—"}</td>
+      <td>${escapeHtml(row[0])}</td>
+      <td>${escapeHtml(row[1] ?? "—")}</td>
+      <td>${escapeHtml(row[2] ?? row[3] ?? "—")}</td>
+      <td>${escapeHtml(row[4] ?? "—")}</td>
+      <td>${escapeHtml(row[5] ?? "—")}</td>
+      <td>${escapeHtml(row[6] ?? "—")}</td>
+      <td>${escapeHtml(row[7] != null ? fmt(row[7], 0) : "—")}</td>
     </tr>`
   ).join("");
 }
@@ -703,9 +796,9 @@ function renderFracTable() {
   for (let i = 1; i <= 64; i++) {
     const fr = nearestFraction(i / 64, 64);
     rows.push(`<tr data-i64="${i}">
-      <td>${formatFraction(fr)}</td>
-      <td>${(i / 64).toFixed(4)}</td>
-      <td>${(i / 64 * 25.4).toFixed(3)}</td>
+      <td>${escapeHtml(formatFraction(fr))}</td>
+      <td>${escapeHtml((i / 64).toFixed(4))}</td>
+      <td>${escapeHtml((i / 64 * 25.4).toFixed(3))}</td>
     </tr>`);
   }
   tbody.innerHTML = rows.join("");
@@ -878,12 +971,26 @@ function renderFitTable() {
     const lo = i === 0 ? 0 : FIT_RANGES[i - 1];
     const label = i === 0 ? `≤ ${hi}` : `>${lo}–${hi}`;
     return `<tr data-idx="${i}">
-      <td>${label}</td>
-      <td>+${IT_GRADES[6][i]}</td>
-      <td>+${IT_GRADES[7][i]}</td>
-      <td>+${IT_GRADES[8][i]}</td>
-      <td>+${IT_GRADES[9][i]}</td>
+      <td>${escapeHtml(label)}</td>
+      <td>+${escapeHtml(IT_GRADES[6][i])}</td>
+      <td>+${escapeHtml(IT_GRADES[7][i])}</td>
+      <td>+${escapeHtml(IT_GRADES[8][i])}</td>
+      <td>+${escapeHtml(IT_GRADES[9][i])}</td>
     </tr>`;
+  }).join("");
+  renderFitItTable();
+}
+
+function renderFitItTable() {
+  const head = $("#fit-it-head");
+  const tbody = $("#fit-it-table tbody");
+  if (!head || !tbody || typeof IT_FULL_GRADES === "undefined") return;
+  const grades = Object.keys(IT_FULL_GRADES).map(Number).sort((a, b) => a - b);
+  head.innerHTML = `<tr><th data-i18n="th.range">${escapeHtml(t("th.range"))}</th>${grades.map((g) => `<th>IT${g}</th>`).join("")}</tr>`;
+  tbody.innerHTML = FIT_RANGES.map((hi, i) => {
+    const lo = i === 0 ? 0 : FIT_RANGES[i - 1];
+    const label = i === 0 ? `≤ ${hi}` : `>${lo}–${hi}`;
+    return `<tr data-idx="${i}"><td>${escapeHtml(label)}</td>${grades.map((g) => `<td>${escapeHtml(IT_FULL_GRADES[g][i])}</td>`).join("")}</tr>`;
   }).join("");
 }
 
@@ -895,6 +1002,113 @@ function highlightFitRow(idx) {
 
 $("#fit-d").addEventListener("input", updateFits);
 $("#fit-class").addEventListener("input", updateFits);
+
+/* =========================================================
+ * 工程參考
+ * ========================================================= */
+let refMode = "metal";
+
+function tRef(key) {
+  return t(key) !== key ? t(key) : key;
+}
+
+function refSearchHaystack(mode, row) {
+  if (mode === "metal") return row.join(" ").toLowerCase();
+  if (mode === "mold") return row.join(" ").toLowerCase();
+  if (mode === "rough") return row.join(" ").toLowerCase();
+  if (mode === "element") return row.join(" ").toLowerCase();
+  return "";
+}
+
+function renderRefTable() {
+  const thead = $("#ref-table thead");
+  const tbody = $("#ref-table tbody");
+  const q = ($("#ref-search")?.value || "").trim().toLowerCase();
+  if (!thead || !tbody) return;
+
+  if (refMode === "metal") {
+    thead.innerHTML = `<tr>
+      <th>${escapeHtml(t("ref.th.code"))}</th><th>${escapeHtml(t("ref.th.cat"))}</th>
+      <th>${escapeHtml(t("ref.th.tensile"))}</th><th>${escapeHtml(t("ref.th.hard"))}</th>
+      <th>${escapeHtml(t("ref.th.cond"))}</th><th>${escapeHtml(t("ref.th.comp"))}</th>
+      <th>${escapeHtml(t("ref.th.note"))}</th></tr>`;
+    const rows = REF_METALS.filter((r) => !q || refSearchHaystack("metal", r).includes(q));
+    tbody.innerHTML = rows.map((r) => `<tr>
+      <td><strong>${escapeHtml(r[0])}</strong></td>
+      <td>${escapeHtml(tRef("ref.cat." + r[1]))}</td>
+      <td>${escapeHtml(r[2])}</td><td>${escapeHtml(r[3])}</td>
+      <td>${escapeHtml(r[4])}</td><td>${escapeHtml(r[5])}</td><td>${escapeHtml(r[6])}</td>
+    </tr>`).join("");
+    return;
+  }
+
+  if (refMode === "mold") {
+    const brands = MOLD_BRAND_KEYS;
+    thead.innerHTML = `<tr>
+      <th>${escapeHtml(t("ref.th.cat"))}</th><th>${escapeHtml(t("ref.th.jis"))}</th><th>${escapeHtml(t("ref.th.aisi"))}</th>
+      ${brands.map((b) => `<th>${escapeHtml(t("ref.brand." + b))}</th>`).join("")}
+      <th>${escapeHtml(t("ref.th.hrc"))}</th></tr>`;
+    const rows = REF_MOLD_STEELS.filter((r) => !q || refSearchHaystack("mold", r).includes(q));
+    tbody.innerHTML = rows.map((r) => `<tr>
+      <td>${escapeHtml(tRef("ref.mold." + r[0]))}</td>
+      <td>${escapeHtml(r[1] || "—")}</td><td>${escapeHtml(r[2] || "—")}</td>
+      ${r.slice(3, 9).map((c) => `<td>${escapeHtml(c || "—")}</td>`).join("")}
+      <td>${escapeHtml(r[9])}</td></tr>`).join("");
+    return;
+  }
+
+  if (refMode === "rough") {
+    thead.innerHTML = `<tr>
+      <th>${escapeHtml(t("ref.th.process"))}</th><th>${escapeHtml(t("ref.th.ra"))}</th>
+      <th>${escapeHtml(t("ref.th.fine"))}</th></tr>`;
+    const rows = REF_ROUGHNESS.filter((r) => !q || refSearchHaystack("rough", r).includes(q));
+    tbody.innerHTML = rows.map((r) => {
+      const ra = `${r[1]}–${r[2]}`;
+      const fine = r[3] != null ? `${r[3]}–${r[4]}` : "—";
+      return `<tr>
+        <td>${escapeHtml(tRef("ref.proc." + r[0]))}</td>
+        <td>${escapeHtml(ra)}</td><td>${escapeHtml(fine)}</td></tr>`;
+    }).join("");
+    return;
+  }
+
+  if (refMode === "element") {
+    thead.innerHTML = `<tr>
+      <th>${escapeHtml(t("ref.th.sym"))}</th><th>${escapeHtml(t("ref.th.el"))}</th>
+      <th>${escapeHtml(t("ref.th.fx"))}</th></tr>`;
+    const rows = REF_ELEMENTS.filter((r) => {
+      if (!q) return true;
+      const hay = `${r[0]} ${tRef(r[1])} ${tRef(r[2])}`.toLowerCase();
+      return hay.includes(q);
+    });
+    tbody.innerHTML = rows.map((r) => `<tr>
+      <td><strong>${escapeHtml(r[0])}</strong></td>
+      <td>${escapeHtml(tRef(r[1]))}</td><td>${escapeHtml(tRef(r[2]))}</td></tr>`).join("");
+    return;
+  }
+
+  // IT 公差
+  const grades = Object.keys(IT_FULL_GRADES).map(Number).sort((a, b) => a - b);
+  thead.innerHTML = `<tr><th>${escapeHtml(t("th.range"))}</th>${grades.map((g) => `<th>IT${g}</th>`).join("")}</tr>`;
+  tbody.innerHTML = FIT_RANGES.map((hi, i) => {
+    const lo = i === 0 ? 0 : FIT_RANGES[i - 1];
+    const label = i === 0 ? `≤ ${hi}` : `>${lo}–${hi}`;
+    if (q && !label.includes(q) && !grades.some((g) => String(IT_FULL_GRADES[g][i]).includes(q))) return "";
+    return `<tr><td>${escapeHtml(label)}</td>${grades.map((g) => `<td>${escapeHtml(IT_FULL_GRADES[g][i])}</td>`).join("")}</tr>`;
+  }).join("");
+}
+
+$$("#ref-seg .seg-btn").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    $$("#ref-seg .seg-btn").forEach((b) => b.classList.remove("active"));
+    btn.classList.add("active");
+    refMode = btn.dataset.val;
+    const search = $("#ref-search");
+    if (search) search.classList.toggle("hidden", refMode === "it" || refMode === "element");
+    renderRefTable();
+  });
+});
+$("#ref-search")?.addEventListener("input", renderRefTable);
 
 /* =========================================================
  * 參數對比
@@ -919,12 +1133,12 @@ function buildCompareInputs() {
     });
     wrap.innerHTML = CMP_FIELDS.map((f) => {
       const val = prev[f.key] ?? parseFloat((f.kind ? toDisp(f[scheme], f.kind) : f[scheme]).toPrecision(4));
-      const em = f.kind ? ` <em data-ukind="${f.kind}">${uLabel(f.kind)}</em>` : "";
-      const ukind = f.kind ? ` data-ukind="${f.kind}"` : "";
+      const em = f.kind ? ` <em data-ukind="${escapeHtml(f.kind)}">${escapeHtml(uLabel(f.kind))}</em>` : "";
+      const ukind = f.kind ? ` data-ukind="${escapeHtml(f.kind)}"` : "";
       return `
       <div class="field">
-        <label><span>${t(f.labelKey)}</span>${em}</label>
-        <input type="number" id="cmp-${scheme}-${f.key}" value="${val}" step="any" min="0"${ukind}>
+        <label><span>${escapeHtml(t(f.labelKey))}</span>${em}</label>
+        <input type="number" id="cmp-${scheme}-${f.key}" value="${escapeHtml(val)}" step="any" min="0"${ukind}>
       </div>`;
     }).join("");
     wrap.style.display = "grid";
@@ -950,12 +1164,12 @@ function computeScheme(scheme) {
 function deltaCell(a, b, higherIsBetter = null) {
   if (a == null || b == null || a === 0) return `<td class="delta-flat">—</td>`;
   const pct = ((b - a) / a) * 100;
-  if (Math.abs(pct) < 0.05) return `<td class="delta-flat">${t("cmp.same")}</td>`;
+  if (Math.abs(pct) < 0.05) return `<td class="delta-flat">${escapeHtml(t("cmp.same"))}</td>`;
   const sign = pct > 0 ? "+" : "";
   let cls = "delta-flat";
   if (higherIsBetter === true) cls = pct > 0 ? "delta-up" : "delta-down";
   if (higherIsBetter === false) cls = pct > 0 ? "delta-down" : "delta-up";
-  return `<td class="${cls}">${sign}${fmt(pct, 1)}%</td>`;
+  return `<td class="${cls}">${escapeHtml(`${sign}${fmt(pct, 1)}%`)}</td>`;
 }
 
 function updateCompare() {
@@ -980,15 +1194,15 @@ function updateCompare() {
       "1.00×",
       lifeRatio != null ? fmt(lifeRatio, 2) + "×" : "—",
       lifeRatio != null
-        ? `<td class="${lifeRatio >= 1 ? "delta-up" : "delta-down"}">${lifeRatio >= 1 ? "+" : ""}${fmt((lifeRatio - 1) * 100, 1)}%</td>`
+        ? `<td class="${lifeRatio >= 1 ? "delta-up" : "delta-down"}">${escapeHtml(`${lifeRatio >= 1 ? "+" : ""}${fmt((lifeRatio - 1) * 100, 1)}%`)}</td>`
         : `<td class="delta-flat">—</td>`,
     ],
   ];
 
   tbody.innerHTML = rows
     .map((r) => {
-      const deltaHtml = r[3].startsWith("<td") ? r[3] : `<td>${r[3]}</td>`;
-      return `<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td>${deltaHtml}</tr>`;
+      const deltaHtml = r[3].startsWith("<td") ? r[3] : `<td>${escapeHtml(r[3])}</td>`;
+      return `<tr><td>${escapeHtml(r[0])}</td><td>${escapeHtml(r[1])}</td><td>${escapeHtml(r[2])}</td>${deltaHtml}</tr>`;
     })
     .join("");
 
@@ -1024,15 +1238,15 @@ function renderRoi(a, b, nExp) {
     [`${t("roi.costPart")} (${cur})`, money(cA.total), money(cB.total), deltaCell(cA.total, cB.total, false)],
   ];
   tbody.innerHTML = rows.map((r) => {
-    const d = r[3].startsWith("<td") ? r[3] : `<td>${r[3]}</td>`;
-    return `<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td>${d}</tr>`;
+    const d = r[3].startsWith("<td") ? r[3] : `<td>${escapeHtml(r[3])}</td>`;
+    return `<tr><td>${escapeHtml(r[0])}</td><td>${escapeHtml(r[1])}</td><td>${escapeHtml(r[2])}</td>${d}</tr>`;
   }).join("");
 
   // CTA:邊個方案每件平啲 → 慳幾多 + 加入詢價單
   const save = cA.total - cB.total;                     // >0 表示 B 平
   const rel = Math.max(cA.total, cB.total) || 1;
   if (Math.abs(save) / rel < 0.005) {
-    cta.innerHTML = `<div class="roi-flat">${t("roi.ctaNone")}</div>`;
+    cta.innerHTML = `<div class="roi-flat">${escapeHtml(t("roi.ctaNone"))}</div>`;
     return;
   }
   const better = save > 0 ? "B" : "A";
@@ -1041,11 +1255,11 @@ function renderRoi(a, b, nExp) {
   const betterScheme = save > 0 ? b : a;
   cta.innerHTML = `
     <div class="roi-save">
-      <div class="roi-save-txt">${t("roi.ctaSave", {
+      <div class="roi-save-txt">${escapeHtml(t("roi.ctaSave", {
         s: t(better === "A" ? "cmp.schemeA" : "cmp.schemeB"),
         per: money(perPart), batch: money(batch), qty: fmt(qty, 0),
-      })}</div>
-      <button class="pc-restock roi-add" type="button">🧾 ${t("roi.ctaBtn")}</button>
+      }))}</div>
+      <button class="pc-restock roi-add" type="button">🧾 ${escapeHtml(t("roi.ctaBtn"))}</button>
     </div>`;
   cta.querySelector(".roi-add").addEventListener("click", (e) => {
     if (typeof addToInquiry === "function") {
@@ -1116,13 +1330,13 @@ function updateAdvisor() {
 
   $("#adv-advice").innerHTML = `
     <span class="iso-badge" style="background:${color}22;color:${color};border:1px solid ${color}66">
-      ISO ${tIso(m.iso)}
+      ISO ${escapeHtml(tIso(m.iso))}
     </span>
-    <div class="advice-block"><div class="atitle">🔷 ${t("at.grade")}</div><p>${advice.grade}</p></div>
-    <div class="advice-block"><div class="atitle">🎨 ${t("at.coating")}</div><p>${advice.coating}</p></div>
-    <div class="advice-block"><div class="atitle">📐 ${t("at.geometry")}</div><p>${advice.geometry}</p></div>
-    <div class="advice-block"><div class="atitle">💧 ${t("at.coolant")}</div><p>${advice.coolant}</p></div>
-    <div class="advice-block"><div class="atitle">💡 ${t("at.tips")}</div><p>${advice.tips}</p></div>
+    <div class="advice-block"><div class="atitle">🔷 ${escapeHtml(t("at.grade"))}</div><p>${escapeHtml(advice.grade)}</p></div>
+    <div class="advice-block"><div class="atitle">🎨 ${escapeHtml(t("at.coating"))}</div><p>${escapeHtml(advice.coating)}</p></div>
+    <div class="advice-block"><div class="atitle">📐 ${escapeHtml(t("at.geometry"))}</div><p>${escapeHtml(advice.geometry)}</p></div>
+    <div class="advice-block"><div class="atitle">💧 ${escapeHtml(t("at.coolant"))}</div><p>${escapeHtml(advice.coolant)}</p></div>
+    <div class="advice-block"><div class="atitle">💡 ${escapeHtml(t("at.tips"))}</div><p>${escapeHtml(advice.tips)}</p></div>
   `;
 
   if (typeof renderAdvisorShop === "function") renderAdvisorShop(m, op, d);
@@ -1135,7 +1349,7 @@ function updateAdvisor() {
  * ========================================================= */
 function renderInsertExamples() {
   $("#insert-examples").innerHTML = INSERT_EXAMPLES
-    .map((c) => `<button type="button" class="chip" data-code="${c}">${c}</button>`)
+    .map((c) => `<button type="button" class="chip" data-code="${escapeHtml(c)}">${escapeHtml(c)}</button>`)
     .join("");
 }
 
@@ -1200,7 +1414,7 @@ function updateInsert() {
   if (r.edge) rows.push(["8", r.edge, `${t("ins.p8")}:${tIns("edge." + r.edge)}`]);
   if (r.hand) rows.push(["9", r.hand, `${t("ins.p9")}:${tIns("hand." + r.hand)}`]);
   tbody.innerHTML = rows
-    .map((row) => `<tr><td>${row[0]}</td><td>${row[1]}</td><td>${row[2]}</td></tr>`)
+    .map((row) => `<tr><td>${escapeHtml(row[0])}</td><td>${escapeHtml(row[1])}</td><td>${escapeHtml(row[2])}</td></tr>`)
     .join("");
 
   // 備註:公差 + 切深/進給建議 + 正負型 + 廠商尾碼
@@ -1487,6 +1701,8 @@ function refreshAll() {
   populateMaterialSelect($("#wt-material"));
   populateFitClasses();
   buildCompareInputs();
+  renderFitItTable();
+  renderRefTable();
   updateAllOutputs();
 }
 
@@ -1502,6 +1718,7 @@ if (UNITS === "imperial") {
 }
 renderFracTable();
 renderFitTable();
+renderRefTable();
 renderInsertExamples();
 populateTapSelect();
 refreshAll();

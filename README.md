@@ -5,6 +5,10 @@ A pure front-end (HTML / CSS / JavaScript) collection of CNC machining calculato
 
 **🔗 Live demo / 線上試用:** https://nihil-cyber.github.io/cnc-toolkit/
 
+**📘 Technical handbook / 完整技術手冊:** [HANDBOOK.md](HANDBOOK.md)（網絡架構 · 資料層 · Backend · Frontend · Coding）
+
+**📋 Changelog / 更新記錄:** [CHANGELOG.md](CHANGELOG.md)
+
 **English** | [中文](#中文)
 
 ---
@@ -78,7 +82,19 @@ Served over **http/https**, the app registers a Service Worker and caches all as
 - **Desktop:** Chrome/Edge → the "Install" icon in the address bar → standalone window.
 - **Offline:** after the first load it runs with no network (all calculation is client-side).
 
-> After changing any `js/`, `css/` or `index.html`, bump the `CACHE` version in [sw.js](sw.js) (e.g. `v1`→`v2`) so users get the update on next visit.
+> After changing any `js/`, `css/` or `index.html`, bump the version in [version.json](version.json), [js/version.js](js/version.js) and the `CACHE` name in [sw.js](sw.js) so users get the update on next visit.
+
+### Versioning & backups
+
+- **Current version:** `1.2.0` — defined in [version.json](version.json)
+- **Changelog:** update [CHANGELOG.md](CHANGELOG.md) on every release or major feature (see writing guidelines at the top of that file)
+- **In-app:** Settings → **Changelog** to view the log (cached offline via Service Worker)
+- **Manual backup:**
+  ```bash
+  ./scripts/backup.sh           # timestamped zip → backups/cnc-toolkit-1.0.0-YYYYMMDD-HHMMSS.zip
+  ./scripts/backup.sh --release # milestone zip → backups/cnc-toolkit-v1.0.0.zip
+  ```
+- **Auto backup on commit** (optional): run `./scripts/install-hooks.sh` once; after each commit that touches app source, a timestamped zip is created in `backups/`
 
 ### Selling with the toolkit (optional)
 
@@ -206,7 +222,19 @@ python3 -m http.server 8000
 - **電腦**:Chrome/Edge → 網址列「安裝」圖示 → 獨立視窗程式。
 - **離線**:首次載入後,關網路都照用(計算全部喺前端)。
 
-> 改咗任何 `js/`、`css/` 或 `index.html` 之後,把 [sw.js](sw.js) 最上面嘅 `CACHE` 版本號 +1(例 `v1`→`v2`),使用者下次開啟就更新快取。
+> 改咗任何 `js/`、`css/` 或 `index.html` 之後,請同步更新 [version.json](version.json)、[js/version.js](js/version.js) 同 [sw.js](sw.js) 嘅 `CACHE` 名稱,使用者下次開啟就會更新快取。
+
+### 版本與備份
+
+- **目前版本:** `1.2.0` — 定義於 [version.json](version.json)
+- **更新記錄:** 每次發版或大型功能必須更新 [CHANGELOG.md](CHANGELOG.md)（撰寫規範見檔案頂部）
+- **軟件內:** 設定 → **更新記錄** 可查看（離線快取）
+- **手動備份:**
+  ```bash
+  ./scripts/backup.sh           # 時間戳 → backups/cnc-toolkit-1.0.0-YYYYMMDD-HHMMSS.zip
+  ./scripts/backup.sh --release # 里程碑 → backups/cnc-toolkit-v1.0.0.zip
+  ```
+- **提交後自動備份**(可選):執行一次 `./scripts/install-hooks.sh`;之後每次 commit 改到 app 原始碼,會自動喺 `backups/` 建立壓縮包
 
 ### 結合銷售(可選)
 
