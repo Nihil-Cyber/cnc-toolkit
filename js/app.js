@@ -401,9 +401,21 @@ function applyParamAssess(barSel, items, fieldIds = []) {
   const issues = items.filter((it) => it.level && it.level !== "ok");
   const overall = worstLevel(items.map((it) => it.level)) || "ok";
 
+  const chips = items
+    .filter((it) => it.id && !it.id.endsWith("-hm"))
+    .map((it) => {
+      const sym = it.level === "ok" ? "✓" : it.level === "warn" ? "!" : "✕";
+      const name = it.id.split("-").pop();
+      return `<span class="param-chip status-${it.level}">${sym} ${escapeHtml(name)}</span>`;
+    })
+    .join("");
+
   if (overall === "ok" && issues.length === 0) {
     bar.className = "param-status status-ok";
-    bar.innerHTML = `<span class="param-status-text">${escapeHtml(t("status.allOk"))}</span><span class="param-status-legend">${escapeHtml(t("status.legend"))}</span>`;
+    bar.innerHTML = `
+      <span class="param-status-text">${escapeHtml(t("status.allOk"))}</span>
+      <div class="param-status-chips">${chips}</div>
+      <span class="param-status-legend">${escapeHtml(t("status.legend"))}</span>`;
     return;
   }
 
@@ -417,6 +429,7 @@ function applyParamAssess(barSel, items, fieldIds = []) {
   const list = issues.map((it) => `<li>${escapeHtml(formatAssessMsg(it))}</li>`).join("");
   bar.innerHTML = `
     <span class="param-status-text">${escapeHtml(t("status.hasIssues", { n: issues.length }))}</span>
+    <div class="param-status-chips">${chips}</div>
     <ul class="param-status-list">${list}</ul>
     <span class="param-status-legend">${escapeHtml(t("status.legend"))}</span>`;
 }
@@ -428,7 +441,7 @@ function updateMilling() {
   const m = getMaterial($("#mill-material").value);
   $("#mill-vc-hint").textContent = vcHintText(m);
 
-  const d = numM("#mill-d"), z = num("#mill-z"), fz = numM("#mill-fz"),
+  const d = numM("#mill-d"), z = num("#mill-z"), vc = numM("#mill-vc"), fz = numM("#mill-fz"),
     ap = numM("#mill-ap"), ae = numM("#mill-ae"),
     n = num("#mill-n"), vf = numM("#mill-vf");
   if (!m || d <= 0 || z <= 0) {

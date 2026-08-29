@@ -2,7 +2,7 @@
  * CNC 工程師工具包 — Service Worker(離線快取)
  * 改動任何 app 檔案後,把 CACHE 版本號 +1 即可強制更新快取
  * ========================================================= */
-const CACHE = "cnc-toolkit-v6";
+const CACHE = "cnc-toolkit-v7";
 const ASSETS = [
   "./",
   "./index.html",
@@ -48,21 +48,20 @@ self.addEventListener("fetch", (e) => {
   if (url.origin !== self.location.origin) return; // 只快取同源資源
 
   e.respondWith(
-    caches.match(req).then((cached) => {
-      if (cached) return cached;
-      return fetch(req)
-        .then((res) => {
-          if (res && res.ok && res.type === "basic") {
-            const copy = res.clone();
-            caches.open(CACHE).then((c) => c.put(req, copy));
-          }
-          return res;
-        })
-        .catch(() => {
-          // 離線且未快取:導覽請求回退到首頁
+    fetch(req)
+      .then((res) => {
+        if (res && res.ok && res.type === "basic") {
+          const copy = res.clone();
+          caches.open(CACHE).then((c) => c.put(req, copy));
+        }
+        return res;
+      })
+      .catch(() =>
+        caches.match(req).then((cached) => {
+          if (cached) return cached;
           if (req.mode === "navigate") return caches.match("./index.html");
           return Response.error();
-        });
-    })
+        })
+      )
   );
 });

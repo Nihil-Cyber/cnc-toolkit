@@ -817,6 +817,25 @@ button.btn-secondary:hover { background: rgba(79, 142, 247, 0.28); }
   opacity: 0.85;
 }
 
+.param-status-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 6px 0;
+}
+
+.param-chip {
+  font-size: 11px;
+  font-family: var(--mono);
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+}
+
+.param-chip.status-ok { color: var(--green); border-color: var(--green); }
+.param-chip.status-warn { color: var(--yellow); border-color: var(--yellow); }
+.param-chip.status-danger { color: var(--red); border-color: var(--red); }
+
 .field.status-ok input,
 .field.status-ok select {
   border-color: var(--green);
