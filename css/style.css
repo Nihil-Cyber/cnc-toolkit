@@ -767,7 +767,94 @@ button.btn-secondary:hover { background: rgba(79, 142, 247, 0.28); }
 
 .result-item.primary .rvalue { color: var(--accent); }
 
+.result-item.status-ok { border-color: var(--green); background: color-mix(in srgb, var(--green) 8%, var(--bg-input)); }
+.result-item.status-warn { border-color: var(--yellow); background: color-mix(in srgb, var(--yellow) 10%, var(--bg-input)); }
+.result-item.status-danger { border-color: var(--red); background: color-mix(in srgb, var(--red) 10%, var(--bg-input)); }
+.result-item.status-warn .rvalue { color: var(--yellow); }
+.result-item.status-danger .rvalue { color: var(--red); }
+
 .result-item .runit { font-size: 11px; color: var(--text-dim); margin-left: 4px; font-family: var(--mono); }
+
+/* ---------- 參數合理性標示 ---------- */
+.param-status {
+  margin-bottom: 14px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  line-height: 1.5;
+  border-left: 3px solid var(--border);
+  min-height: 36px;
+}
+
+.param-status.status-ok {
+  background: rgba(62, 207, 142, 0.1);
+  border-left-color: var(--green);
+}
+
+.param-status.status-warn {
+  background: rgba(247, 201, 72, 0.1);
+  border-left-color: var(--yellow);
+}
+
+.param-status.status-danger {
+  background: rgba(224, 82, 96, 0.1);
+  border-left-color: var(--red);
+}
+
+.param-status-text { font-weight: 600; display: block; margin-bottom: 4px; }
+
+.param-status-list {
+  margin: 6px 0 6px 16px;
+  padding: 0;
+  color: var(--text-dim);
+}
+
+.param-status-legend {
+  display: block;
+  margin-top: 6px;
+  font-size: 11px;
+  color: var(--text-dim);
+  opacity: 0.85;
+}
+
+.field.status-ok input,
+.field.status-ok select {
+  border-color: var(--green);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--green) 25%, transparent);
+}
+
+.field.status-warn input,
+.field.status-warn select {
+  border-color: var(--yellow);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--yellow) 30%, transparent);
+}
+
+.field.status-danger input,
+.field.status-danger select {
+  border-color: var(--red);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--red) 30%, transparent);
+}
+
+.field.status-ok input:focus { border-color: var(--green); }
+.field.status-warn input:focus { border-color: var(--yellow); }
+.field.status-danger input:focus { border-color: var(--red); }
+
+.field.status-ok label::before,
+.field.status-warn label::before,
+.field.status-danger label::before {
+  content: "";
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 6px;
+  vertical-align: middle;
+  transform: translateY(-1px);
+}
+
+.field.status-ok label::before { background: var(--green); }
+.field.status-warn label::before { background: var(--yellow); }
+.field.status-danger label::before { background: var(--red); }
 
 .note {
   margin-top: 14px;

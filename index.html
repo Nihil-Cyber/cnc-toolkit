@@ -217,6 +217,7 @@
         <div class="grid-2">
           <div class="card">
             <h3 data-i18n="card.input">輸入</h3>
+            <div class="param-status status-ok" id="mill-param-status" aria-live="polite"></div>
             <div class="field">
               <label data-i18n="lbl.material">工件材料</label>
               <select id="mill-material"></select>
@@ -285,6 +286,7 @@
         <div class="grid-2">
           <div class="card">
             <h3 data-i18n="card.input">輸入</h3>
+            <div class="param-status status-ok" id="turn-param-status" aria-live="polite"></div>
             <div class="field">
               <label data-i18n="lbl.material">工件材料</label>
               <select id="turn-material"></select>
@@ -352,6 +354,7 @@
         <div class="grid-2">
           <div class="card">
             <h3 data-i18n="drill.card">鑽孔</h3>
+            <div class="param-status status-ok" id="drill-param-status" aria-live="polite"></div>
             <div class="field">
               <label data-i18n="lbl.material">工件材料</label>
               <select id="drill-material"></select>
@@ -1192,6 +1195,7 @@
   <script src="js/data.js"></script>
   <script src="js/ref-data.js"></script>
   <script src="js/calc.js"></script>
+  <script src="js/assess.js"></script>
   <script src="js/export.js"></script>
   <script src="js/shop.js"></script>
   <script src="js/app.js"></script>

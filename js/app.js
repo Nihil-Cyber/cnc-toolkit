@@ -351,12 +351,74 @@ function renderResults(container, items) {
   container.innerHTML = items
     .map(
       (it) => `
-      <div class="result-item${it.primary ? " primary" : ""}">
+      <div class="result-item${it.primary ? " primary" : ""}${it.status ? ` status-${it.status}` : ""}">
         <span class="rlabel">${escapeHtml(it.label)}</span>
         <span class="rvalue">${escapeHtml(it.value)}</span><span class="runit">${escapeHtml(it.unit || "")}</span>
       </div>`
     )
     .join("");
+}
+
+/** 參數合理性：輸入框邊框顏色 */
+function setFieldStatus(inputSel, level) {
+  const el = $(inputSel);
+  if (!el) return;
+  el.classList.remove("status-ok", "status-warn", "status-danger");
+  const field = el.closest(".field");
+  if (field) field.classList.remove("status-ok", "status-warn", "status-danger");
+  if (level) {
+    el.classList.add(`status-${level}`);
+    if (field) field.classList.add(`status-${level}`);
+  }
+}
+
+function formatAssessMsg(item) {
+  const p = { ...(item.params || {}) };
+  if (p.lo != null) p.lo = fmt(toDisp(p.lo, "vc"), 0);
+  if (p.hi != null) p.hi = fmt(toDisp(p.hi, "vc"), 0);
+  if (p.ref != null) p.ref = fmt(toDisp(p.ref, "len"));
+  if (p.hm != null) p.hm = fmt(toDisp(p.hm, "len"));
+  if (p.r != null) p.r = fmt(p.r, 1);
+  if (p.ratio != null) p.ratio = fmt(p.ratio, 2);
+  return t(item.key, p);
+}
+
+/** 參數合理性：狀態列 + 輸入框標色 */
+function applyParamAssess(barSel, items, fieldIds = []) {
+  const bar = $(barSel);
+  if (!bar) return;
+
+  fieldIds.forEach((id) => setFieldStatus(`#${id}`, null));
+  if (!items.length) {
+    bar.className = "param-status";
+    bar.innerHTML = "";
+    return;
+  }
+  items.forEach((it) => {
+    if (it.id && !it.id.endsWith("-hm")) setFieldStatus(`#${it.id}`, it.level);
+  });
+
+  const issues = items.filter((it) => it.level && it.level !== "ok");
+  const overall = worstLevel(items.map((it) => it.level)) || "ok";
+
+  if (overall === "ok" && issues.length === 0) {
+    bar.className = "param-status status-ok";
+    bar.innerHTML = `<span class="param-status-text">${escapeHtml(t("status.allOk"))}</span><span class="param-status-legend">${escapeHtml(t("status.legend"))}</span>`;
+    return;
+  }
+
+  if (issues.length === 0) {
+    bar.className = "param-status status-ok";
+    bar.innerHTML = `<span class="param-status-text">${escapeHtml(t("status.allOk"))}</span>`;
+    return;
+  }
+
+  bar.className = `param-status status-${overall}`;
+  const list = issues.map((it) => `<li>${escapeHtml(formatAssessMsg(it))}</li>`).join("");
+  bar.innerHTML = `
+    <span class="param-status-text">${escapeHtml(t("status.hasIssues", { n: issues.length }))}</span>
+    <ul class="param-status-list">${list}</ul>
+    <span class="param-status-legend">${escapeHtml(t("status.legend"))}</span>`;
 }
 
 /* =========================================================
@@ -369,7 +431,10 @@ function updateMilling() {
   const d = numM("#mill-d"), z = num("#mill-z"), fz = numM("#mill-fz"),
     ap = numM("#mill-ap"), ae = numM("#mill-ae"),
     n = num("#mill-n"), vf = numM("#mill-vf");
-  if (d <= 0 || z <= 0) return;
+  if (!m || d <= 0 || z <= 0) {
+    applyParamAssess("#mill-param-status", [], ["mill-vc", "mill-fz", "mill-ap", "mill-ae"]);
+    return;
+  }
 
   const q = mrrMilling(ap, ae, vf);
   const hm = avgChipThickness(fz, ae, d);
@@ -377,13 +442,17 @@ function updateMilling() {
   const pc = powerFromMrr(q, kc);
   const mt = torque(pc, n);
   const ctf = chipThinningFactor(ae, d);
+  const assess = assessMilling(m, d, vc, fz, ap, ae, hm);
+  const hmItem = assess.find((it) => it.id === "mill-hm");
 
   renderResults($("#mill-results"), [
     { label: t("r.q"), value: fmt(toDisp(q, "mrr")), unit: uLabel("mrr"), primary: true },
     { label: t("r.pc"), value: fmt(toDisp(pc, "power")), unit: uLabel("power"), primary: true },
-    { label: t("r.hm"), value: fmt(toDisp(hm, "len")), unit: uLabel("len") },
+    { label: t("r.hm"), value: fmt(toDisp(hm, "len")), unit: uLabel("len"), status: hmItem?.level },
     { label: t("r.torque"), value: fmt(toDisp(mt, "torque")), unit: uLabel("torque") },
   ]);
+
+  applyParamAssess("#mill-param-status", assess, ["mill-vc", "mill-fz", "mill-ap", "mill-ae"]);
 
   let note = t("note.mill", { kc1: m.kc1 });
   if (ae / d < 0.5) {
@@ -432,12 +501,16 @@ function updateTurning() {
 
   const d = numM("#turn-d"), vc = numM("#turn-vc"), f = numM("#turn-f"),
     ap = numM("#turn-ap"), rn = parseFloat($("#turn-rnose").value);
-  if (d <= 0) return;
+  if (!m || d <= 0) {
+    applyParamAssess("#turn-param-status", [], ["turn-vc", "turn-f", "turn-ap"]);
+    return;
+  }
 
   const q = mrrTurning(vc, ap, f);
   const kc = specificCuttingForce(m.kc1, m.mc, f); // 車削 hm ≈ f(近似,90° 主偏角)
   const pc = powerFromMrr(q, kc);
   const rough = surfaceRoughness(f, rn);
+  const assess = assessTurning(m, vc, f, ap, rn);
 
   renderResults($("#turn-results"), [
     { label: t("r.q"), value: fmt(toDisp(q, "mrr")), unit: uLabel("mrr"), primary: true },
@@ -445,6 +518,8 @@ function updateTurning() {
     { label: t("r.ra"), value: fmt(toDisp(rough.ra, "rough")), unit: uLabel("rough"), primary: true },
     { label: t("r.rz"), value: fmt(toDisp(rough.rz, "rough")), unit: uLabel("rough") },
   ]);
+
+  applyParamAssess("#turn-param-status", assess, ["turn-vc", "turn-f", "turn-ap"]);
 
   let note = "";
   if (f > rn * 0.6) {
@@ -494,7 +569,10 @@ function updateDrilling() {
     depth = numM("#drill-depth"), vf = numM("#drill-vf"),
     pointAngle = parseFloat($("#drill-point").value),
     peckQ = numM("#drill-peck"), rapid = numM("#drill-rapid");
-  if (d <= 0) return;
+  if (!m || d <= 0) {
+    applyParamAssess("#drill-param-status", [], ["drill-vc", "drill-f", "drill-depth"]);
+    return;
+  }
 
   const q = mrrDrilling(d, vf);
   const kc = specificCuttingForce(m.kc1, m.mc, f / 2);
@@ -502,6 +580,7 @@ function updateDrilling() {
   const pointLen = drillPointLength(d, pointAngle);
   const through = depth + pointLen;
   const cyc = peckCycle(depth, peckQ, vf, rapid);
+  const assess = assessDrilling(m, d, vc, f, depth);
 
   renderResults($("#drill-results"), [
     { label: t("r.q"), value: fmt(toDisp(q, "mrr")), unit: uLabel("mrr"), primary: true },
@@ -511,6 +590,8 @@ function updateDrilling() {
     { label: t("r.pecks"), value: cyc ? String(cyc.pecks) : "—", unit: t("unit.pecks") },
     { label: t("r.cycleTime"), value: cyc ? fmt(cyc.totalSec) : "—", unit: t("unit.s"), primary: true },
   ]);
+
+  applyParamAssess("#drill-param-status", assess, ["drill-vc", "drill-f", "drill-depth"]);
 
   const ratio = depth / d;
   let note = "";
