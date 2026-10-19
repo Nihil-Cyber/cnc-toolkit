@@ -235,6 +235,7 @@ document.addEventListener("keydown", (e) => {
   if (e.key === "Escape") {
     settingsModal.classList.add("hidden");
     changelogModal?.classList.add("hidden");
+    $("#search-modal")?.classList.add("hidden");
     closeMobileNav();
   }
 });
@@ -298,15 +299,20 @@ $$(".export-btn").forEach((btn) => {
 });
 
 /* ---------- 分頁切換 ---------- */
+function showTab(tab) {
+  const btn = $(`.nav-item[data-tab="${tab}"]`);
+  const panel = $("#tab-" + tab);
+  if (!btn || !panel) return;
+  $$(".nav-item").forEach((b) => b.classList.remove("active"));
+  $$(".tab-panel").forEach((p) => p.classList.remove("active"));
+  btn.classList.add("active");
+  panel.classList.add("active");
+  closeMobileNav();
+  updateMobileTitle();
+}
+
 $$(".nav-item").forEach((btn) => {
-  btn.addEventListener("click", () => {
-    $$(".nav-item").forEach((b) => b.classList.remove("active"));
-    $$(".tab-panel").forEach((p) => p.classList.remove("active"));
-    btn.classList.add("active");
-    $("#tab-" + btn.dataset.tab).classList.add("active");
-    closeMobileNav();
-    updateMobileTitle();
-  });
+  btn.addEventListener("click", () => showTab(btn.dataset.tab));
 });
 
 /* ---------- 通用:材料下拉選單(依 ISO 群組分組) ---------- */
@@ -1897,6 +1903,7 @@ function refreshAll() {
   renderFitItTable();
   renderRefTable();
   updateAllOutputs();
+  if (typeof refreshSearchUi === "function") refreshSearchUi();
 }
 
 applyTheme(currentTheme());

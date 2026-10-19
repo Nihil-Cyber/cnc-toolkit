@@ -1,7 +1,7 @@
 {
   "name": "CNC 工程師工具包",
   "short_name": "CNC 工具包",
-  "description": "CNC 加工計算助手 — 銑削 / 車削 / 鑽孔・攻牙 / 刀片代碼 / 插補補償 / G-code / 材料重量 / 工程參考 (v1.4.0)",
+  "description": "CNC 加工計算助手 — 銑削 / 車削 / 鑽孔・攻牙 / 刀片代碼 / 插補補償 / G-code / 材料重量 / 工程參考 (v1.5.0)",
   "start_url": ".",
   "scope": ".",
   "display": "standalone",

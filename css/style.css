@@ -171,6 +171,136 @@ body.nav-open { overflow: hidden; }
 
 .sidebar-controls #theme-toggle:hover { border-color: var(--accent); }
 
+.sidebar-controls #search-open {
+  width: 38px;
+  flex-shrink: 0;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 15px;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+.sidebar-controls #search-open:hover { border-color: var(--accent); }
+
+/* ---------- 收藏 ---------- */
+.nav-item { position: relative; }
+.nav-item.is-fav::after {
+  content: "★";
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--accent);
+}
+.nav-sep {
+  height: 1px;
+  margin: 6px 8px;
+  background: var(--border);
+}
+
+.panel-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.fav-btn { white-space: nowrap; }
+.fav-btn.is-on { border-color: var(--accent); }
+
+/* ---------- 全局搜尋 ---------- */
+.modal-search {
+  width: min(560px, calc(100vw - 32px));
+  max-height: min(80dvh, 620px);
+  display: flex;
+  flex-direction: column;
+  align-self: start;
+  margin-top: 10vh;
+}
+.search-input {
+  width: 100%;
+  padding: 11px 14px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg-input);
+  color: var(--text);
+  font-size: 15px;
+  font-family: var(--font);
+}
+.search-input:focus { outline: none; border-color: var(--accent); }
+.search-results {
+  flex: 1;
+  overflow-y: auto;
+  margin-top: 12px;
+  min-height: 120px;
+}
+.search-group {
+  padding: 10px 8px 4px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.search-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.search-item:hover { background: var(--hover); }
+.search-item.active { background: var(--accent-soft); }
+.search-kind {
+  flex-shrink: 0;
+  min-width: 44px;
+  padding: 2px 6px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 10.5px;
+  color: var(--text-dim);
+  text-align: center;
+}
+.search-text { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.search-item-title { font-size: 14px; color: var(--text); }
+.search-item.active .search-item-title { color: var(--accent); font-weight: 600; }
+.search-item-sub {
+  font-size: 11.5px;
+  color: var(--text-dim);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.search-fav {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  font-size: 17px;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 6px;
+}
+.search-fav:hover { background: var(--hover); }
+.search-fav.is-on { color: var(--accent); }
+.search-empty { padding: 24px 8px; text-align: center; color: var(--text-dim); font-size: 13px; }
+.search-hint { margin-top: 10px; font-size: 11px; color: var(--text-dim); text-align: right; }
+
+#search-close {
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  font-size: 17px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+#search-close:hover { background: var(--hover); color: var(--text); }
+
+.search-flash { animation: searchFlash 1.6s ease; border-radius: 10px; }
+@keyframes searchFlash {
+  0%, 30% { box-shadow: 0 0 0 3px var(--accent); }
+  100% { box-shadow: 0 0 0 3px transparent; }
+}
+
 .sidebar-footer {
   padding: 14px 20px;
   font-size: 11px;
@@ -307,7 +437,9 @@ body.nav-open { overflow: hidden; }
   .nav-item span { display: none; }
   .sidebar-controls { flex-direction: column; }
   .sidebar-controls #settings-open span { display: none; }
-  .sidebar-controls #theme-toggle { width: 100%; }
+  .sidebar-controls #theme-toggle,
+  .sidebar-controls #search-open { width: 100%; }
+  .nav-item.is-fav::after { position: absolute; top: 4px; right: 6px; font-size: 9px; }
   .panel-header { flex-direction: column; }
   .export-btn span { display: inline; }
 }
@@ -449,6 +581,11 @@ body.nav-open { overflow: hidden; }
     justify-content: center;
     min-height: 44px;
   }
+
+  .panel-actions { width: 100%; }
+  .panel-actions > button { flex: 1; justify-content: center; min-height: 44px; }
+  .nav-item.is-fav::after { position: static; font-size: 11px; }
+  .modal-search { margin-top: 4vh; }
 
   .card { padding: 16px; }
 
