@@ -383,6 +383,13 @@ function formatAssessMsg(item) {
   return t(item.key, p);
 }
 
+/** 加工時間顯示：短時間用秒，≥120 s 用分鐘 */
+function machTimeResult(sec) {
+  if (sec == null || !isFinite(sec) || sec <= 0) return { value: "—", unit: t("unit.s") };
+  if (sec < 120) return { value: fmt(sec, 1), unit: t("unit.s") };
+  return { value: fmt(sec / 60, 2), unit: t("unit.min") };
+}
+
 /** 參數合理性：狀態列 + 輸入框標色 */
 function applyParamAssess(barSel, items, fieldIds = []) {
   const bar = $(barSel);
@@ -457,17 +464,36 @@ function updateMilling() {
   const ctf = chipThinningFactor(ae, d);
   const assess = assessMilling(m, d, vc, fz, ap, ae, hm);
   const hmItem = assess.find((it) => it.id === "mill-hm");
+  const pathLen = numM("#mill-pathlen");
+  const passes = Math.max(1, num("#mill-passes") || 1);
+  const passSec = cutTimeSec(pathLen, vf);
+  const totalSec = passSec != null ? passSec * passes : null;
+  const mtDisp = machTimeResult(totalSec);
+  const passDisp = passes > 1 && passSec != null ? machTimeResult(passSec) : null;
 
-  renderResults($("#mill-results"), [
-    { label: t("r.q"), value: fmt(toDisp(q, "mrr")), unit: uLabel("mrr"), primary: true },
-    { label: t("r.pc"), value: fmt(toDisp(pc, "power")), unit: uLabel("power"), primary: true },
+  const millItems = [
+    { label: t("r.machTime"), value: mtDisp.value, unit: mtDisp.unit, primary: true },
+  ];
+  if (passDisp) {
+    millItems.push({ label: t("r.machTimePass"), value: passDisp.value, unit: passDisp.unit });
+  }
+  millItems.push(
+    { label: t("r.q"), value: fmt(toDisp(q, "mrr")), unit: uLabel("mrr") },
+    { label: t("r.pc"), value: fmt(toDisp(pc, "power")), unit: uLabel("power") },
     { label: t("r.hm"), value: fmt(toDisp(hm, "len")), unit: uLabel("len"), status: hmItem?.level },
     { label: t("r.torque"), value: fmt(toDisp(mt, "torque")), unit: uLabel("torque") },
-  ]);
+  );
+  renderResults($("#mill-results"), millItems);
 
   applyParamAssess("#mill-param-status", assess, ["mill-vc", "mill-fz", "mill-ap", "mill-ae"]);
 
   let note = t("note.mill", { kc1: m.kc1 });
+  if (pathLen > 0 && vf > 0) {
+    note += " " + t("note.machTime", {
+      l: `${fmt(toDisp(pathLen, "len"))} ${uLabel("len")}`,
+      vf: `${fmt(toDisp(vf, "feedRate"), 0)} ${uLabel("feedRate")}`,
+    });
+  }
   if (ae / d < 0.5) {
     note += unitize(t("note.thinning", { ctf: fmt(ctf, 2), fz: fmt(toDisp(fz * ctf, "len")) }));
   }
@@ -503,7 +529,7 @@ $("#mill-suggest").addEventListener("click", () => {
 ["d", "z", "vc", "n", "fz", "vf"].forEach((k) =>
   $(`#mill-${k}`).addEventListener("input", () => syncMilling(k))
 );
-["#mill-material", "#mill-ap", "#mill-ae"].forEach((id) => $(id).addEventListener("input", updateMilling));
+["#mill-material", "#mill-ap", "#mill-ae", "#mill-pathlen", "#mill-passes"].forEach((id) => $(id).addEventListener("input", updateMilling));
 
 /* =========================================================
  * 車削
@@ -513,7 +539,8 @@ function updateTurning() {
   $("#turn-vc-hint").textContent = vcHintText(m);
 
   const d = numM("#turn-d"), vc = numM("#turn-vc"), f = numM("#turn-f"),
-    ap = numM("#turn-ap"), rn = parseFloat($("#turn-rnose").value);
+    ap = numM("#turn-ap"), rn = parseFloat($("#turn-rnose").value),
+    cutLen = numM("#turn-cutlen"), vf = numM("#turn-vf");
   if (!m || d <= 0) {
     applyParamAssess("#turn-param-status", [], ["turn-vc", "turn-f", "turn-ap"]);
     return;
@@ -524,9 +551,12 @@ function updateTurning() {
   const pc = powerFromMrr(q, kc);
   const rough = surfaceRoughness(f, rn);
   const assess = assessTurning(m, vc, f, ap, rn);
+  const turnSec = cutTimeSec(cutLen, vf);
+  const mtDisp = machTimeResult(turnSec);
 
   renderResults($("#turn-results"), [
-    { label: t("r.q"), value: fmt(toDisp(q, "mrr")), unit: uLabel("mrr"), primary: true },
+    { label: t("r.machTime"), value: mtDisp.value, unit: mtDisp.unit, primary: true },
+    { label: t("r.q"), value: fmt(toDisp(q, "mrr")), unit: uLabel("mrr") },
     { label: t("r.pc"), value: fmt(toDisp(pc, "power")), unit: uLabel("power") },
     { label: t("r.ra"), value: fmt(toDisp(rough.ra, "rough")), unit: uLabel("rough"), primary: true },
     { label: t("r.rz"), value: fmt(toDisp(rough.rz, "rough")), unit: uLabel("rough") },
@@ -535,14 +565,22 @@ function updateTurning() {
   applyParamAssess("#turn-param-status", assess, ["turn-vc", "turn-f", "turn-ap"]);
 
   let note = "";
+  if (cutLen > 0 && vf > 0) {
+    note = t("note.machTime", {
+      l: `${fmt(toDisp(cutLen, "len"))} ${uLabel("len")}`,
+      vf: `${fmt(toDisp(vf, "feedRate"), 0)} ${uLabel("feedRate")}`,
+    });
+  }
   if (f > rn * 0.6) {
-    note = unitize(t("note.turnHigh", {
+    const turnNote = unitize(t("note.turnHigh", {
       f: fmt(toDisp(f, "len")),
       rn,
       fmax: fmt(toDisp(rn * 0.5, "len")),
     }));
+    note = note ? `${note} ${turnNote}` : turnNote;
   } else if (f < 0.05) {
-    note = t("note.turnLow");
+    const turnNote = t("note.turnLow");
+    note = note ? `${note} ${turnNote}` : turnNote;
   }
   $("#turn-note").textContent = note;
 }
@@ -565,7 +603,7 @@ function syncTurning(changed) {
 ["d", "vc", "n", "f", "vf"].forEach((k) =>
   $(`#turn-${k}`).addEventListener("input", () => syncTurning(k))
 );
-["#turn-material", "#turn-ap", "#turn-rnose"].forEach((id) => $(id).addEventListener("input", updateTurning));
+["#turn-material", "#turn-ap", "#turn-rnose", "#turn-cutlen"].forEach((id) => $(id).addEventListener("input", updateTurning));
 
 /* =========================================================
  * 鑽孔・攻牙
@@ -594,15 +632,25 @@ function updateDrilling() {
   const through = depth + pointLen;
   const cyc = peckCycle(depth, peckQ, vf, rapid);
   const assess = assessDrilling(m, d, vc, f, depth);
+  const feedSec = cutTimeSec(depth, vf);
+  const machSec = cyc ? cyc.totalSec : feedSec;
+  const mtDisp = machTimeResult(machSec);
+  const feedDisp = cyc && cyc.usePeck ? machTimeResult(cyc.feedSec) : null;
 
-  renderResults($("#drill-results"), [
-    { label: t("r.q"), value: fmt(toDisp(q, "mrr")), unit: uLabel("mrr"), primary: true },
+  const drillItems = [
+    { label: t("r.machTime"), value: mtDisp.value, unit: mtDisp.unit, primary: true },
+  ];
+  if (feedDisp) {
+    drillItems.push({ label: t("r.machTimeFeed"), value: feedDisp.value, unit: feedDisp.unit });
+  }
+  drillItems.push(
+    { label: t("r.q"), value: fmt(toDisp(q, "mrr")), unit: uLabel("mrr") },
     { label: t("r.pc"), value: fmt(toDisp(pc, "power")), unit: uLabel("power") },
     { label: t("r.pointLen"), value: fmt(toDisp(pointLen, "len")), unit: uLabel("len") },
     { label: t("r.throughDepth"), value: fmt(toDisp(through, "len")), unit: uLabel("len") },
     { label: t("r.pecks"), value: cyc ? String(cyc.pecks) : "—", unit: t("unit.pecks") },
-    { label: t("r.cycleTime"), value: cyc ? fmt(cyc.totalSec) : "—", unit: t("unit.s"), primary: true },
-  ]);
+  );
+  renderResults($("#drill-results"), drillItems);
 
   applyParamAssess("#drill-param-status", assess, ["drill-vc", "drill-f", "drill-depth"]);
 

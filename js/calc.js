@@ -88,6 +88,12 @@ function torque(pcKw, n) {
   return (9550 * pcKw) / n;
 }
 
+/** 加工時間 (s) ← 路徑/切削長度 L (mm)、進給 vf (mm/min) */
+function cutTimeSec(length, vf) {
+  if (!length || length <= 0 || !vf || vf <= 0) return null;
+  return (length / vf) * 60;
+}
+
 /** 車削材料移除率 Q (cm³/min) = vc × ap × f */
 function mrrTurning(vc, ap, f) {
   return vc * ap * f;

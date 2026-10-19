@@ -264,6 +264,16 @@
                 <input type="number" id="mill-ae" value="5" min="0" step="any" data-ukind="len">
               </div>
             </div>
+            <div class="field-row">
+              <div class="field">
+                <label><span data-i18n="lbl.pathLen">走刀路徑長 L</span> <em data-ukind="len">mm</em></label>
+                <input type="number" id="mill-pathlen" value="500" min="0" step="any" data-ukind="len">
+              </div>
+              <div class="field">
+                <label data-i18n="lbl.passes">走刀次數</label>
+                <input type="number" id="mill-passes" value="1" min="1" step="1">
+              </div>
+            </div>
             <button class="btn-secondary" id="mill-suggest" data-i18n="mill.suggest">依材料帶入建議值</button>
           </div>
           <div class="card">
@@ -332,6 +342,10 @@
                 <option value="1.2">1.2</option>
                 <option value="1.6">1.6</option>
               </select>
+            </div>
+            <div class="field">
+              <label><span data-i18n="lbl.cutLen">切削長度 L</span> <em data-ukind="len">mm</em></label>
+              <input type="number" id="turn-cutlen" value="100" min="0" step="any" data-ukind="len">
             </div>
           </div>
           <div class="card">
