@@ -125,6 +125,18 @@ function scallopHeight(r, stepover) {
   return r - Math.sqrt(r * r - half * half);
 }
 
+/**
+ * 球頭刀有效切削直徑 Deff (mm)
+ * D 名義直徑,ap 由刀尖計的軸向切深。ap ≥ 半徑時整支刀入刀,Deff = D
+ * Deff = 2 × √(R² − (R − ap)²)
+ */
+function ballEffectiveDiameter(d, ap) {
+  if (!(d > 0) || !(ap > 0)) return null;
+  const r = d / 2;
+  if (ap >= r) return d;
+  return 2 * Math.sqrt(Math.max(0, r * r - (r - ap) * (r - ap)));
+}
+
 /** 由目標殘料高度反推行距 */
 function stepoverFromScallop(r, h) {
   if (h >= r) return 2 * r;

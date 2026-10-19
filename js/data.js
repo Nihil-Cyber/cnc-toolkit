@@ -34,6 +34,31 @@ const MATERIALS = [
   // ISO H — 淬硬鋼
   { id: "hard-50",      iso: "H", grade: "SKD61", vcCarbide: [60, 120], vcHss: null, kc1: 3100, mc: 0.22, fzFactor: 0.6, hardness: "HRC 48–55", density: 7.8 },
   { id: "hard-60",      iso: "H", grade: "SKD11", vcCarbide: [40, 90],  vcHss: null, kc1: 3600, mc: 0.21, fzFactor: 0.5, hardness: "HRC 56–62", density: 7.7 },
+  // —— v1.6 擴充（+24）。vc / kc1 為車間起始參考值,實際以刀具商目錄為準 ——
+  { id: "steel-1018",   iso: "P", grade: "1018 / S15C / 1.0401",     vcCarbide: [160, 300], vcHss: [30, 50], kc1: 1600, mc: 0.25, fzFactor: 1.05, hardness: "HB 120–180", density: 7.87 },
+  { id: "steel-s50c",   iso: "P", grade: "S50C / 1050 / C50",        vcCarbide: [130, 240], vcHss: [20, 35], kc1: 1800, mc: 0.25, fzFactor: 0.95, hardness: "HB 180–240", density: 7.85 },
+  { id: "steel-ss400",  iso: "P", grade: "SS400 / A36 / S275",       vcCarbide: [160, 280], vcHss: [25, 45], kc1: 1600, mc: 0.25, fzFactor: 1.05, hardness: "HB 120–160", density: 7.85 },
+  { id: "steel-12l14",  iso: "P", grade: "12L14 / SUM24L",           vcCarbide: [180, 320], vcHss: [30, 55], kc1: 1400, mc: 0.26, fzFactor: 1.15, hardness: "HB 120–180", density: 7.85 },
+  { id: "steel-4340",   iso: "P", grade: "4340 / SNCM439 / 1.6511",  vcCarbide: [100, 180], vcHss: [15, 30], kc1: 2100, mc: 0.25, fzFactor: 0.85, hardness: "HB 280–360", density: 7.85 },
+  { id: "steel-8620",   iso: "P", grade: "8620 / SNCM220 / 1.6523",  vcCarbide: [140, 250], vcHss: [20, 35], kc1: 1800, mc: 0.25, fzFactor: 0.95, hardness: "HB 150–220", density: 7.85 },
+  { id: "steel-h13",    iso: "P", grade: "H13 / SKD61 / 1.2344",     vcCarbide: [90, 160],  vcHss: [12, 22], kc1: 2000, mc: 0.24, fzFactor: 0.85, hardness: "HB 180–230", density: 7.8 },
+  { id: "steel-p20",    iso: "P", grade: "P20 / 1.2311",             vcCarbide: [100, 180], vcHss: [15, 25], kc1: 2000, mc: 0.24, fzFactor: 0.85, hardness: "HB 280–320", density: 7.85 },
+  { id: "ss-303",       iso: "M", grade: "SUS303 / 303",            vcCarbide: [120, 200], vcHss: [15, 25], kc1: 1900, mc: 0.21, fzFactor: 0.9,  hardness: "HB 150–190", density: 7.9 },
+  { id: "ss-410",       iso: "M", grade: "SUS410 / 410",            vcCarbide: [80, 150],  vcHss: [10, 18], kc1: 2100, mc: 0.22, fzFactor: 0.8,  hardness: "HB 180–230", density: 7.7 },
+  { id: "ss-420",       iso: "M", grade: "SUS420J2 / 420",          vcCarbide: [80, 140],  vcHss: [10, 18], kc1: 2200, mc: 0.22, fzFactor: 0.75, hardness: "HB 200–250", density: 7.7 },
+  { id: "ss-430",       iso: "M", grade: "SUS430 / 430",            vcCarbide: [110, 180], vcHss: [12, 20], kc1: 1900, mc: 0.22, fzFactor: 0.85, hardness: "HB 150–200", density: 7.7 },
+  { id: "ss-duplex",    iso: "M", grade: "2205 / SUS329J3L / 1.4462", vcCarbide: [50, 100], vcHss: [8, 14], kc1: 2500, mc: 0.21, fzFactor: 0.7, hardness: "HB 250–290", density: 7.8 },
+  { id: "ci-gg20",      iso: "K", grade: "FC200 / GG20 / GJL-200",  vcCarbide: [160, 320], vcHss: [20, 40], kc1: 1000, mc: 0.28, fzFactor: 1.15, hardness: "HB 160–200", density: 7.15 },
+  { id: "ci-ggg40",     iso: "K", grade: "FCD400 / GGG40 / GJS-400", vcCarbide: [130, 240], vcHss: [18, 30], kc1: 1250, mc: 0.28, fzFactor: 1.05, hardness: "HB 140–190", density: 7.1 },
+  { id: "al-2024",      iso: "N", grade: "2024-T3",                 vcCarbide: [250, 600], vcHss: [60, 120], kc1: 800, mc: 0.25, fzFactor: 1.15, hardness: "HB 120", density: 2.78 },
+  { id: "al-5052",      iso: "N", grade: "5052-H32",                vcCarbide: [300, 700], vcHss: [80, 140], kc1: 650, mc: 0.25, fzFactor: 1.25, hardness: "HB 60", density: 2.68 },
+  { id: "al-adc12",     iso: "N", grade: "ADC12 / A383",            vcCarbide: [200, 450], vcHss: [50, 100], kc1: 750, mc: 0.25, fzFactor: 1.1,  hardness: "HB 80", density: 2.74 },
+  { id: "cu-bronze",    iso: "N", grade: "C93200 / CAC406",         vcCarbide: [120, 300], vcHss: [30, 60],  kc1: 900, mc: 0.27, fzFactor: 1.0,  hardness: "HB 65–90", density: 8.8 },
+  { id: "n-pom",        iso: "N", grade: "POM / Delrin",            vcCarbide: [200, 500], vcHss: [80, 150], kc1: 300, mc: 0.20, fzFactor: 1.3,  hardness: "—", density: 1.41 },
+  { id: "ti-gr2",       iso: "S", grade: "Ti Gr.2 / TP340",         vcCarbide: [50, 100],  vcHss: [10, 18], kc1: 1500, mc: 0.23, fzFactor: 0.8,  hardness: "HB 160–200", density: 4.51 },
+  { id: "inconel-625",  iso: "S", grade: "Inconel 625 / N06625",    vcCarbide: [20, 50],   vcHss: [4, 8],   kc1: 2500, mc: 0.25, fzFactor: 0.55, hardness: "HB 180–240", density: 8.44 },
+  { id: "hard-40",      iso: "H", grade: "HRC 38–45",               vcCarbide: [90, 160],  vcHss: null,     kc1: 2600, mc: 0.22, fzFactor: 0.7,  hardness: "HRC 38–45", density: 7.8 },
+  { id: "hard-65",      iso: "H", grade: "HRC 62–67",               vcCarbide: [30, 70],   vcHss: null,     kc1: 4000, mc: 0.20, fzFactor: 0.4,  hardness: "HRC 62–67", density: 7.7 },
 ];
 
 /* ISO 群組顏色(名稱由 i18n 提供) */

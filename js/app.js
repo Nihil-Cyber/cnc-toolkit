@@ -857,6 +857,33 @@ function updateScallop() {
 ["#surf-f", "#surf-ra-target", "#surf-rnose"].forEach((id) => $(id).addEventListener("input", updateSurface));
 ["#scallop-d", "#scallop-step", "#scallop-h-target"].forEach((id) => $(id).addEventListener("input", updateScallop));
 
+/** 球頭有效直徑:切深決定實際參與切削的直徑,轉速要按 Deff 計先至達到目標 vc */
+function updateBallDeff() {
+  const d = numM("#deff-d");
+  const ap = numM("#deff-ap");
+  const vc = numM("#deff-vc");
+  const deff = ballEffectiveDiameter(d, ap);
+  const box = $("#deff-results");
+  const note = $("#deff-note");
+  if (!box) return;
+  if (deff == null) {
+    renderResults(box, []);
+    if (note) note.textContent = "";
+    return;
+  }
+  const nEff = vc > 0 ? (vc * 1000) / (Math.PI * deff) : null;
+  const vcActual = vc > 0 && d > 0 ? vc * (deff / d) : null;
+  renderResults(box, [
+    { label: t("r.deff"), value: fmt(toDisp(deff, "len")), unit: uLabel("len"), primary: true },
+    { label: t("r.deffPct"), value: fmt((deff / d) * 100, 1), unit: "%" },
+    { label: t("r.deffRpm"), value: nEff != null ? fmt(nEff, 0) : "—", unit: "rpm", primary: true },
+    { label: t("r.deffVcActual"), value: vcActual != null ? fmt(toDisp(vcActual, "vc"), 0) : "—", unit: uLabel("vc") },
+  ]);
+  if (note) note.textContent = ap >= d / 2 ? t("deff.noteFull") : t("deff.note");
+}
+
+["#deff-d", "#deff-ap", "#deff-vc"].forEach((id) => $(id).addEventListener("input", updateBallDeff));
+
 /* =========================================================
  * 硬度換算
  * ========================================================= */
@@ -1878,6 +1905,7 @@ function updateAllOutputs() {
   updateTapping();
   updateSurface();
   updateScallop();
+  updateBallDeff();
   updateHardness();
   updateConvert();
   solveTriangleUI();

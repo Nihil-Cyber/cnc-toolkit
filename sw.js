@@ -2,7 +2,7 @@
  * CNC 工程師工具包 — Service Worker(離線快取)
  * 改動任何 app 檔案後,把 CACHE 版本號 +1 即可強制更新快取
  * ========================================================= */
-const CACHE = "cnc-toolkit-v10";
+const CACHE = "cnc-toolkit-v11";
 const ASSETS = [
   "./",
   "./index.html",

@@ -533,6 +533,25 @@
             <div class="results" id="scallop-results"></div>
             <div class="note" data-i18n="scallop.note">殘料高度即係相鄰刀路之間留低嘅波峰高度。</div>
           </div>
+          <div class="card">
+            <h3 data-i18n="deff.card">球頭有效直徑</h3>
+            <div class="field-row">
+              <div class="field">
+                <label><span data-i18n="lbl.ballDia">球刀直徑 D</span> <em data-ukind="len">mm</em></label>
+                <input type="number" id="deff-d" value="10" min="0" step="any" data-ukind="len">
+              </div>
+              <div class="field">
+                <label><span data-i18n="lbl.deffAp">軸向切深 ap（由刀尖計）</span> <em data-ukind="len">mm</em></label>
+                <input type="number" id="deff-ap" value="0.5" min="0" step="any" data-ukind="len">
+              </div>
+            </div>
+            <div class="field">
+              <label><span data-i18n="lbl.deffVc">目標切削速度 vc</span> <em data-ukind="vc">m/min</em></label>
+              <input type="number" id="deff-vc" value="200" min="0" step="any" data-ukind="vc">
+            </div>
+            <div class="results" id="deff-results"></div>
+            <div class="note" id="deff-note"></div>
+          </div>
         </div>
       </section>
 

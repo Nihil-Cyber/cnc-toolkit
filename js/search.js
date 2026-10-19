@@ -10,7 +10,7 @@ const SEARCH_KEYWORDS = {
   milling: "mill milling end mill rpm vc fz vf mrr power torque time 銑 銑削 铣削 轉速 转速 進給 进给 加工時間 加工时间",
   turning: "turn turning lathe rpm ra rz nose radius time 車 車削 车削 刀鼻 刀尖 加工時間",
   drilling: "drill drilling tap tapping peck g83 thread 鑽 鑽孔 钻孔 攻牙 攻丝 底孔 螺紋 螺纹 啄鑽",
-  surface: "surface roughness ra rz scallop ball nose stepover 表面 粗糙度 殘料 残料 球刀 行距",
+  surface: "surface roughness ra rz scallop ball nose stepover deff effective diameter 表面 粗糙度 殘料 残料 球刀 行距 有效直徑 有效直径",
   hardness: "hardness hrc hv hb hrb tensile 硬度 洛氏 維氏 布氏 抗拉",
   convert: "inch mm fraction convert 英寸 英吋 吋 分數 分数 換算",
   triangle: "triangle trig sin cos tan chamfer taper 三角 倒角 錐度 锥度",
