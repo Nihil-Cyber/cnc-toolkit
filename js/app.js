@@ -1650,25 +1650,58 @@ let gcodeMode = "bolt";
 
 function gnum(v) { return (+(+v).toFixed(4)).toString(); }
 
-function genBoltCircle(g) {
-  const r = g.bcd / 2;
-  const L = [];
-  L.push(`(BOLT CIRCLE - ${g.holes} holes, BCD ${gnum(g.bcd)})`);
-  L.push(`${g.gcode} G90 G54`);
+/** G84 剛性攻牙進給 F = S × P(G94 每分進給) */
+function tapFeed(s, pitch) {
+  return s > 0 && pitch > 0 ? s * pitch : 0;
+}
+
+function cycleLine(g) {
+  const rz = `R${gnum(g.rPlane)} Z${gnum(-g.depth)}`;
+  if (g.cycle === "G84") return `G99 G84 ${rz} F${gnum(tapFeed(g.s, g.pitch))}`;
+  if ((g.cycle === "G83" || g.cycle === "G73") && g.q > 0) {
+    return `G99 ${g.cycle} ${rz} Q${gnum(g.q)} F${gnum(g.f)}`;
+  }
+  return `G99 G81 ${rz} F${gnum(g.f)}`;
+}
+
+function genDrillPattern(g, title, pts) {
+  const L = [title];
+  if (g.cycle === "G84") {
+    if (!(g.pitch > 0)) return "(ERROR: tap pitch must be > 0)";
+    L.push(`(TAP PITCH ${gnum(g.pitch)}, F = S x P = ${gnum(tapFeed(g.s, g.pitch))})`);
+  }
+  L.push(`${g.gcode} G90 G54 G94`);
   L.push(`S${gnum(g.s)} M3`);
   L.push(`G0 Z${gnum(g.safeZ)}`);
+  L.push(`G0 X${gnum(pts[0][0])} Y${gnum(pts[0][1])}`);
+  if (g.cycle === "G84" && g.ctrl === "fanuc") L.push(`M29 S${gnum(g.s)}`);
+  L.push(cycleLine(g));
+  for (let i = 1; i < pts.length; i++) L.push(`X${gnum(pts[i][0])} Y${gnum(pts[i][1])}`);
+  L.push(`G80`, `G0 Z${gnum(g.safeZ)}`, `M5`, `M30`);
+  return L.join("\n");
+}
+
+function genBoltCircle(g) {
+  const r = g.bcd / 2;
   const pts = [];
   for (let i = 0; i < g.holes; i++) {
     const a = ((g.startAng + (i * 360) / g.holes) * Math.PI) / 180;
     pts.push([g.cx + r * Math.cos(a), g.cy + r * Math.sin(a)]);
   }
-  L.push(`G0 X${gnum(pts[0][0])} Y${gnum(pts[0][1])}`);
-  L.push(g.q > 0
-    ? `G99 G83 R${gnum(g.rPlane)} Z${gnum(-g.depth)} Q${gnum(g.q)} F${gnum(g.f)}`
-    : `G99 G81 R${gnum(g.rPlane)} Z${gnum(-g.depth)} F${gnum(g.f)}`);
-  for (let i = 1; i < pts.length; i++) L.push(`X${gnum(pts[i][0])} Y${gnum(pts[i][1])}`);
-  L.push(`G80`, `G0 Z${gnum(g.safeZ)}`, `M5`, `M30`);
-  return L.join("\n");
+  return genDrillPattern(g, `(BOLT CIRCLE - ${g.holes} holes, BCD ${gnum(g.bcd)}, ${g.cycle})`, pts);
+}
+
+/** 矩形孔陣:逐行蛇形走位,減少空行程 */
+function genRectGrid(g) {
+  const pts = [];
+  for (let j = 0; j < g.ny; j++) {
+    for (let k = 0; k < g.nx; k++) {
+      const i = j % 2 === 0 ? k : g.nx - 1 - k;
+      pts.push([g.x0 + i * g.dx, g.y0 + j * g.dy]);
+    }
+  }
+  return genDrillPattern(g,
+    `(RECT GRID - ${g.nx} x ${g.ny} = ${pts.length} holes, pitch ${gnum(g.dx)} x ${gnum(g.dy)}, ${g.cycle})`, pts);
 }
 
 function genHelicalBore(g) {
@@ -1733,11 +1766,29 @@ function updateGcode() {
     s: num("#gc-rpm"), f: num("#gc-feed"),
     rPlane: num("#gc-rplane"), safeZ: num("#gc-safez"),
   };
+  const isDrill = gcodeMode === "bolt" || gcodeMode === "rect";
+  const cycle = $("#gc-cycle").value;
+  $("#gc-cycle-group").classList.toggle("hidden", !isDrill);
+  $(".gc-peck-field").classList.toggle("hidden", cycle !== "G83" && cycle !== "G73");
+  $(".gc-tap-field").classList.toggle("hidden", cycle !== "G84");
+  $("#gc-feed").disabled = isDrill && cycle === "G84";
+  const drill = {
+    cycle, depth: num("#gc-depth-b"), q: num("#gc-peck"),
+    pitch: num("#gc-tappitch"), ctrl: $("#gc-ctrl").value,
+  };
+  const tapHint = $("#gc-tap-hint");
+  tapHint.textContent = isDrill && cycle === "G84"
+    ? t("gc.tapHint", { f: gnum(tapFeed(base.s, drill.pitch)), u: imperial ? "in/min" : "mm/min" })
+    : "";
+
   let out = "";
   if (gcodeMode === "bolt") {
-    out = genBoltCircle({ ...base, cx: num("#gc-cx"), cy: num("#gc-cy"), bcd: num("#gc-bcd"),
-      holes: Math.max(1, Math.round(num("#gc-holes"))), startAng: num("#gc-startang"),
-      depth: num("#gc-depth-b"), q: num("#gc-peck") });
+    out = genBoltCircle({ ...base, ...drill, cx: num("#gc-cx"), cy: num("#gc-cy"), bcd: num("#gc-bcd"),
+      holes: Math.max(1, Math.round(num("#gc-holes"))), startAng: num("#gc-startang") });
+  } else if (gcodeMode === "rect") {
+    out = genRectGrid({ ...base, ...drill, x0: num("#gc-rx0"), y0: num("#gc-ry0"),
+      nx: Math.max(1, Math.round(num("#gc-nx"))), ny: Math.max(1, Math.round(num("#gc-ny"))),
+      dx: num("#gc-dx"), dy: num("#gc-dy") });
   } else if (gcodeMode === "helix") {
     out = genHelicalBore({ ...base, cx: num("#gc-hcx"), cy: num("#gc-hcy"), dbore: num("#gc-bore"),
       dtool: num("#gc-htool"), depth: num("#gc-depth-h"), pitch: num("#gc-pitch") });

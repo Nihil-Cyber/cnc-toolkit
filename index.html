@@ -981,6 +981,7 @@
             <h3 data-i18n="gc.card">參數</h3>
             <div class="seg" data-group="gc-mode">
               <button class="seg-btn active" data-val="bolt" data-i18n="gc.mode.bolt">鑽孔陣列</button>
+              <button class="seg-btn" data-val="rect" data-i18n="gc.mode.rect">矩形孔陣</button>
               <button class="seg-btn" data-val="helix" data-i18n="gc.mode.helix">螺旋鏜孔</button>
               <button class="seg-btn" data-val="face" data-i18n="gc.mode.face">面銑</button>
             </div>
@@ -1003,11 +1004,49 @@
                   <div class="field"><label><span data-i18n="gc.bcd">節圓直徑</span> <em class="gc-ulen">mm</em></label><input type="number" id="gc-bcd" value="80" step="any"></div>
                   <div class="field"><label><span data-i18n="gc.holes">孔數</span></label><input type="number" id="gc-holes" value="6" min="1" step="1"></div>
                 </div>
+                <div class="field"><label><span data-i18n="gc.startAng">起始角度</span> <em>°</em></label><input type="number" id="gc-startang" value="0" step="any"></div>
+              </div>
+
+              <div class="gcode-group hidden" data-mode="rect">
                 <div class="field-row">
-                  <div class="field"><label><span data-i18n="gc.startAng">起始角度</span> <em>°</em></label><input type="number" id="gc-startang" value="0" step="any"></div>
+                  <div class="field"><label><span data-i18n="gc.firstX">首孔 X</span> <em class="gc-ulen">mm</em></label><input type="number" id="gc-rx0" value="0" step="any"></div>
+                  <div class="field"><label><span data-i18n="gc.firstY">首孔 Y</span> <em class="gc-ulen">mm</em></label><input type="number" id="gc-ry0" value="0" step="any"></div>
+                </div>
+                <div class="field-row">
+                  <div class="field"><label data-i18n="gc.cols">X 方向孔數</label><input type="number" id="gc-nx" value="4" min="1" step="1"></div>
+                  <div class="field"><label data-i18n="gc.rows">Y 方向孔數</label><input type="number" id="gc-ny" value="3" min="1" step="1"></div>
+                </div>
+                <div class="field-row">
+                  <div class="field"><label><span data-i18n="gc.dx">X 孔距</span> <em class="gc-ulen">mm</em></label><input type="number" id="gc-dx" value="20" step="any"></div>
+                  <div class="field"><label><span data-i18n="gc.dy">Y 孔距</span> <em class="gc-ulen">mm</em></label><input type="number" id="gc-dy" value="15" step="any"></div>
+                </div>
+              </div>
+
+              <div id="gc-cycle-group">
+                <div class="field-row">
+                  <div class="field">
+                    <label data-i18n="gc.cycle">鑽孔循環</label>
+                    <select id="gc-cycle">
+                      <option value="G81" data-i18n="gc.cyc.g81">G81 鑽孔</option>
+                      <option value="G83" data-i18n="gc.cyc.g83">G83 啄鑽(全退)</option>
+                      <option value="G73" data-i18n="gc.cyc.g73">G73 斷屑(高速啄鑽)</option>
+                      <option value="G84" data-i18n="gc.cyc.g84">G84 攻牙(右旋)</option>
+                    </select>
+                  </div>
                   <div class="field"><label><span data-i18n="gc.depth">深度</span> <em class="gc-ulen">mm</em></label><input type="number" id="gc-depth-b" value="10" step="any"></div>
                 </div>
-                <div class="field"><label><span data-i18n="gc.peck">啄鑽量 Q</span> <em class="gc-ulen">mm</em></label><input type="number" id="gc-peck" value="0" min="0" step="any"><span class="hint" data-i18n="gc.peckHint">0 = G81 不啄鑽</span></div>
+                <div class="field gc-peck-field"><label><span data-i18n="gc.peck">啄鑽量 Q</span> <em class="gc-ulen">mm</em></label><input type="number" id="gc-peck" value="2" min="0" step="any"></div>
+                <div class="field-row gc-tap-field">
+                  <div class="field"><label><span data-i18n="gc.tapPitch">螺距 P</span> <em class="gc-ulen">mm</em></label><input type="number" id="gc-tappitch" value="1.25" min="0" step="any"></div>
+                  <div class="field">
+                    <label data-i18n="gc.ctrl">控制器</label>
+                    <select id="gc-ctrl">
+                      <option value="fanuc" data-i18n="gc.ctrl.fanuc">Fanuc(M29 剛性攻牙)</option>
+                      <option value="generic" data-i18n="gc.ctrl.generic">Haas / 其他(不加 M29)</option>
+                    </select>
+                  </div>
+                </div>
+                <span class="hint" id="gc-tap-hint"></span>
               </div>
 
               <div class="gcode-group hidden" data-mode="helix">

@@ -4,7 +4,7 @@
  * ========================================================= */
 const APP_META = {
   name: "cnc-toolkit",
-  version: "1.3.0",
+  version: "1.4.0",
   codename: "v1.3",
-  build: "20260902",
+  build: "20261019",
 };
