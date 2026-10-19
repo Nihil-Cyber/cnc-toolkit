@@ -1,0 +1,11 @@
+{
+  // Cloudflare Workers — 靜態資源托管(Static Assets)
+  // 部署:npx wrangler deploy   本機預覽:npx wrangler dev
+  "name": "cnc-toolkit",
+  "compatibility_date": "2025-10-01",
+  "assets": {
+    "directory": ".",
+    // 導覽到未知路徑時交回 404(非 SPA);"/" 自動serve index.html
+    "not_found_handling": "none"
+  }
+}

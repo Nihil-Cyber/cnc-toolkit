@@ -1,0 +1,17 @@
+# 唔上傳落 Cloudflare 嘅檔案(只 host 網站本體)
+.git
+.github
+.githooks
+.claude
+.wrangler
+node_modules
+backups
+scripts
+handoff
+.DS_Store
+.gitignore
+.assetsignore
+wrangler.jsonc
+wrangler.toml
+README.md
+HANDBOOK.md
