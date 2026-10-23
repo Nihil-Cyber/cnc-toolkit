@@ -235,6 +235,7 @@ document.addEventListener("keydown", (e) => {
   if (e.key === "Escape") {
     settingsModal.classList.add("hidden");
     changelogModal?.classList.add("hidden");
+    disclaimerModal?.classList.add("hidden");
     $("#search-modal")?.classList.add("hidden");
     closeMobileNav();
   }
@@ -269,6 +270,31 @@ $("#changelog-open")?.addEventListener("click", openChangelog);
 $("#changelog-close")?.addEventListener("click", () => changelogModal?.classList.add("hidden"));
 changelogModal?.addEventListener("click", (e) => {
   if (e.target === changelogModal) changelogModal.classList.add("hidden");
+});
+
+/* ---------- 免責聲明 ---------- */
+const disclaimerModal = $("#disclaimer-modal");
+
+function renderDisclaimerBody() {
+  const body = $("#disclaimer-body");
+  if (!body || typeof buildDisclaimerHtml !== "function") return;
+  body.innerHTML = buildDisclaimerHtml(LANG);
+  const titleEl = $("#disclaimer-title");
+  const d = typeof getLegalDisclaimer === "function" ? getLegalDisclaimer(LANG) : null;
+  if (titleEl && d) titleEl.textContent = d.title;
+}
+
+function openDisclaimer() {
+  if (!disclaimerModal) return;
+  renderDisclaimerBody();
+  disclaimerModal.classList.remove("hidden");
+  settingsModal.classList.add("hidden");
+}
+
+$("#disclaimer-open")?.addEventListener("click", openDisclaimer);
+$("#disclaimer-close")?.addEventListener("click", () => disclaimerModal?.classList.add("hidden"));
+disclaimerModal?.addEventListener("click", (e) => {
+  if (e.target === disclaimerModal) disclaimerModal.classList.add("hidden");
 });
 
 $$("#units-seg .seg-btn").forEach((btn) => {
@@ -1316,9 +1342,6 @@ function buildCompareInputs() {
         <input type="number" id="cmp-${scheme}-${f.key}" value="${escapeHtml(val)}" step="any" min="0"${ukind}>
       </div>`;
     }).join("");
-    wrap.style.display = "grid";
-    wrap.style.gridTemplateColumns = "1fr 1fr";
-    wrap.style.gap = "0 14px";
   });
 }
 
@@ -1884,6 +1907,18 @@ $("#wt-material").addEventListener("input", () => {
 );
 
 $("#gcode-params").addEventListener("input", updateGcode);
+function mountIosNativeUi() {
+  if (!window.CNCNative?.isApp) return;
+  const saveBtn = $("#gcode-save");
+  if (saveBtn) {
+    saveBtn.classList.remove("hidden");
+    saveBtn.addEventListener("click", () => {
+      const ts = new Date().toISOString().slice(0, 16).replace(/[T:]/g, "-");
+      window.CNCNative.saveText(`CNC_gcode_${ts}.nc`, $("#gcode-out").value);
+    });
+  }
+}
+
 $("#gcode-copy").addEventListener("click", async () => {
   const ta = $("#gcode-out");
   try { await navigator.clipboard.writeText(ta.value); }
@@ -1932,6 +1967,7 @@ function refreshAll() {
   renderRefTable();
   updateAllOutputs();
   if (typeof refreshSearchUi === "function") refreshSearchUi();
+  if (disclaimerModal && !disclaimerModal.classList.contains("hidden")) renderDisclaimerBody();
 }
 
 applyTheme(currentTheme());
@@ -1950,6 +1986,7 @@ renderRefTable();
 renderInsertExamples();
 populateTapSelect();
 refreshAll();
+mountIosNativeUi();
 // 初始化時對齊聯動欄位(n、vf 與 vc、fz 保持一致)
 syncMilling("vc");
 syncTurning("vc");

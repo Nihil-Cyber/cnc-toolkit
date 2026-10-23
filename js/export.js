@@ -355,6 +355,15 @@ async function exportActivePanel(appTitle, footerText, lang) {
   const blob = await new Promise((res) => canvas.toBlob(res, "image/png"));
   if (!blob) return;
 
+  if (window.CNCNative?.isApp) {
+    try {
+      await window.CNCNative.shareFile(filename, "image/png", blob);
+      return;
+    } catch (e) {
+      if (e && e.name === "AbortError") return;
+    }
+  }
+
   // 手機:優先用系統分享面板(可直接存入相簿)
   const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
   if (isMobile && navigator.canShare) {

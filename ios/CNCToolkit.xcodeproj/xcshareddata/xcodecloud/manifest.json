@@ -1,0 +1,9 @@
+{
+  "id" : "f62d5233-52a8-4ead-ae74-7dbb4c1e6baa",
+  "targets" : [
+    {
+      "id" : "1799f4a6-085e-4027-ab86-08b9cb4f79e3",
+      "name" : "CNCToolkit"
+    }
+  ]
+}

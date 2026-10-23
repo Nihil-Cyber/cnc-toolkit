@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>CNC 工程師工具包 — 免責聲明</title>
+  <meta name="robots" content="index,follow" />
+  <link rel="stylesheet" href="css/style.css" />
+  <script>
+    (function () {
+      var saved = null;
+      try { saved = localStorage.getItem("cnc-lang"); } catch (e) {}
+      var q = new URLSearchParams(location.search).get("lang");
+      var lang = q || saved || (document.documentElement.lang || "zh-Hant");
+      document.documentElement.lang = lang;
+    })();
+  </script>
+</head>
+<body class="legal-standalone-page">
+  <header class="legal-page-head">
+    <p><a class="legal-page-back" href="index.html" id="legal-back">← 返回工具</a></p>
+    <h1 id="legal-page-title">免責聲明</h1>
+    <p id="legal-lang-row" style="margin-top:10px;font-size:13px;color:var(--text-dim)">
+      <label for="legal-lang-select">Language</label>
+      <select id="legal-lang-select" style="margin-left:8px;padding:6px 10px;border-radius:8px;border:1px solid var(--border);background:var(--bg-input);color:var(--text)"></select>
+    </p>
+  </header>
+  <div class="legal-body" id="legal-page-body"></div>
+  <script src="js/i18n.js"></script>
+  <script src="js/legal.js"></script>
+  <script>
+    (function () {
+      var DEFAULT_LANG = "zh-Hant";
+      var lang = document.documentElement.lang || DEFAULT_LANG;
+      var LANG = (typeof I18N !== "undefined" && I18N[lang]) ? lang : DEFAULT_LANG;
+      if (typeof I18N !== "undefined" && !I18N[LANG]) LANG = "en";
+
+      function t(key) {
+        var s = (I18N[LANG] && I18N[LANG].ui && I18N[LANG].ui[key])
+          || (I18N[DEFAULT_LANG] && I18N[DEFAULT_LANG].ui && I18N[DEFAULT_LANG].ui[key])
+          || key;
+        return s;
+      }
+      window.t = t;
+
+      var sel = document.getElementById("legal-lang-select");
+      Object.keys(I18N || {}).forEach(function (code) {
+        var o = document.createElement("option");
+        o.value = code;
+        o.textContent = code;
+        if (code === LANG) o.selected = true;
+        sel.appendChild(o);
+      });
+
+      function render() {
+        var d = getLegalDisclaimer(LANG);
+        document.getElementById("legal-page-title").textContent = d.title;
+        document.getElementById("legal-page-body").innerHTML = buildDisclaimerHtml(LANG);
+        document.getElementById("legal-back").textContent = "← " + t("legal.backToApp");
+        try { localStorage.setItem("cnc-lang", LANG); } catch (e) {}
+        document.documentElement.lang = LANG;
+        document.title = "CNC — " + d.title;
+      }
+
+      render();
+      sel.addEventListener("change", function () {
+        LANG = sel.value;
+        render();
+      });
+    })();
+  </script>
+</body>
+</html>

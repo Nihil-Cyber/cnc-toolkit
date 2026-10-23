@@ -2,10 +2,11 @@
  * CNC 工程師工具包 — Service Worker(離線快取)
  * 改動任何 app 檔案後,把 CACHE 版本號 +1 即可強制更新快取
  * ========================================================= */
-const CACHE = "cnc-toolkit-v11";
+const CACHE = "cnc-toolkit-v18";
 const ASSETS = [
   "./",
   "./index.html",
+  "./disclaimer.html",
   "./CHANGELOG.md",
   "./css/style.css",
   "./js/version.js",
@@ -15,9 +16,11 @@ const ASSETS = [
   "./js/ref-data.js",
   "./js/calc.js",
   "./js/assess.js",
+  "./js/ios-native.js",
   "./js/export.js",
   "./js/shop.js",
   "./js/app.js",
+  "./js/legal.js",
   "./js/search.js",
   "./version.json",
   "./manifest.webmanifest",

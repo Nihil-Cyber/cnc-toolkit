@@ -31,6 +31,9 @@
 
 ## [Unreleased]
 
+### Added
+- **免責聲明與使用條款**：六語（繁中、简中、英、德、法、印地语）完整條文；設定內可開啟彈窗；獨立頁 `disclaimer.html` 供 PWA／GitHub Pages／App Store 連結
+
 ---
 
 ## [1.6.0] — 2026-10-19

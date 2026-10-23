@@ -3,7 +3,9 @@
 A pure front-end (HTML / CSS / JavaScript) collection of CNC machining calculators — no dependencies, no build step, installable as an offline PWA.
 純前端(HTML / CSS / JavaScript)嘅 CNC 加工計算器合集,零依賴、免建置,可安裝為離線 PWA。
 
-**🔗 Live demo / 線上試用:** https://nihil-cyber.github.io/cnc-toolkit/
+**📱 Primary release / 主發佈渠道:** **iPhone & iPad App** — [`ios/`](ios/)（SwiftUI + WKWebView，網頁資源由 [`scripts/sync-ios-assets.sh`](scripts/sync-ios-assets.sh) 同步）。功能改動請先改根目錄 `js/` / `index.html`，再 sync 後 Archive。
+
+**🔗 Web demo / 網頁試用（次要）:** https://nihil-cyber.github.io/cnc-toolkit/
 
 **📘 Technical handbook / 完整技術手冊:** [HANDBOOK.md](HANDBOOK.md)（網絡架構 · 資料層 · Backend · Frontend · Coding）
 
@@ -62,7 +64,16 @@ Each carries a recommended cutting-speed range, specific cutting force `kc1.1`, 
 
 Each panel has a **📸 Export** button that renders the current inputs, results, tables and notes into a PNG (matching the active theme). On mobile it opens the system share sheet (save to Photos / send to a colleague); on desktop it downloads the PNG. The engine is native Canvas — no external dependency, works offline.
 
-### Run locally
+### iPhone / iPad app (primary)
+
+```bash
+./scripts/sync-ios-assets.sh
+open ios/CNCToolkit.xcodeproj
+```
+
+In Xcode, set your **Signing Team**, then run on a simulator or device. See [ios/README.md](ios/README.md). Screenshot export and G-code use the native share sheet inside the app.
+
+### Run locally (web)
 
 ```bash
 open index.html
@@ -131,6 +142,7 @@ css/style.css         Dark / light theme styles
 js/i18n.js            Six-language dictionary (UI, material names, advice knowledge base)
 js/data.js            Material library, hardness table, thread specs, product catalog
 js/calc.js            Calculation core (pure functions, always metric)
+js/ios-native.js      iOS WKWebView bridge (share PNG / save G-code); no-op on web
 js/export.js          Screenshot export engine (Canvas + Web Share / download)
 js/shop.js            Sales: contextual product cards + inquiry list
 js/app.js             UI logic (i18n, theme, unit system, calculation bindings)
@@ -154,6 +166,8 @@ No license specified yet — add one (e.g. MIT) if you want others to reuse the 
 ## 中文
 
 [English](#english) | **中文**
+
+**📱 主發佈渠道：iPhone / iPad App**（[`ios/`](ios/)）。改功能請先改根目錄網頁資源，執行 `./scripts/sync-ios-assets.sh` 後再在 Xcode Archive。網頁版為次要試用渠道。
 
 ### 特點
 
@@ -202,7 +216,16 @@ No license specified yet — add one (e.g. MIT) if you want others to reuse the 
 
 每個分頁右上角有「📸 匯出截圖」掣,將當前輸入、結果、表格同備註繪成一張 PNG(跟隨主題配色):手機行系統分享面板(存相簿或傳同事),電腦直接下載。引擎用原生 Canvas,無外部依賴,離線可用。
 
-### 本機執行
+### iPhone / iPad App（主渠道）
+
+```bash
+./scripts/sync-ios-assets.sh
+open ios/CNCToolkit.xcodeproj
+```
+
+在 Xcode 設定 **Signing Team** 後用模擬器或真機 Run。詳見 [ios/README.md](ios/README.md)。App 內匯出截圖同 G-code 會走系統分享／「儲存到檔案」。
+
+### 本機執行（網頁）
 
 ```bash
 open index.html

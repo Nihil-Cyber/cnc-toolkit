@@ -51,9 +51,47 @@ body {
   font-size: 14px;
   line-height: 1.6;
   -webkit-text-size-adjust: 100%;
+  overflow-x: clip;
 }
 
 body.nav-open { overflow: hidden; }
+
+/* iOS App（WKWebView）：關閉雙擊放大；網頁版 PWA 唔套用 */
+html.cnc-native-app {
+  --app-safe-top: var(--native-safe-top, env(safe-area-inset-top, 0px));
+  --app-safe-right: var(--native-safe-right, env(safe-area-inset-right, 0px));
+  --app-safe-bottom: var(--native-safe-bottom, env(safe-area-inset-bottom, 0px));
+  --app-safe-left: var(--native-safe-left, env(safe-area-inset-left, 0px));
+  /* 主畫面底色（底部 Home 條區域）；頂欄自行用 --bg-panel 延伸 */
+  background: var(--bg);
+}
+html.cnc-native-app body {
+  touch-action: manipulation;
+  padding: 0 var(--app-safe-right) 0 var(--app-safe-left);
+  min-height: 100dvh;
+  box-sizing: border-box;
+  background: var(--bg);
+}
+@media (min-width: 769px) {
+  html.cnc-native-app body {
+    padding-top: var(--app-safe-top);
+  }
+}
+html.cnc-native-app .layout {
+  min-height: 100dvh;
+  background: var(--bg);
+}
+@media (min-width: 769px) {
+  html.cnc-native-app .layout {
+    min-height: calc(100dvh - var(--app-safe-top));
+  }
+}
+html.cnc-native-app input,
+html.cnc-native-app select,
+html.cnc-native-app textarea,
+html.cnc-native-app .gcode-out {
+  touch-action: auto;
+}
 
 .layout { display: flex; min-height: 100vh; min-height: 100dvh; }
 
@@ -368,6 +406,77 @@ body.nav-open { overflow: hidden; }
 }
 .changelog-body strong { color: var(--text); }
 
+.settings-legal-hint {
+  margin-top: 12px;
+  font-size: 11px;
+  color: var(--text-dim);
+  line-height: 1.5;
+}
+
+.modal-legal { max-width: min(640px, calc(100vw - 24px)); }
+
+.legal-body {
+  max-height: min(62vh, 520px);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  font-size: 13px;
+  line-height: 1.65;
+  color: var(--text-dim);
+  padding-right: 4px;
+}
+
+.legal-body .legal-meta {
+  margin-bottom: 12px;
+  padding: 10px 12px;
+  background: var(--note-bg);
+  border-radius: 8px;
+  color: var(--text);
+  font-size: 12px;
+}
+
+.legal-body .legal-effective { margin-bottom: 16px; font-size: 12px; }
+.legal-body .legal-h {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  margin: 18px 0 8px;
+}
+.legal-body .legal-h:first-of-type { margin-top: 0; }
+.legal-body .legal-p { margin-bottom: 10px; }
+
+.legal-foot {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+  font-size: 12px;
+}
+.legal-foot a { color: var(--accent); text-decoration: none; }
+.legal-foot a:hover { text-decoration: underline; }
+
+body.legal-standalone-page {
+  padding: 20px 16px 40px;
+  max-width: 720px;
+  margin: 0 auto;
+}
+body.legal-standalone-page .legal-page-head {
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+}
+body.legal-standalone-page .legal-page-head h1 {
+  font-size: 20px;
+  margin-bottom: 8px;
+}
+body.legal-standalone-page .legal-page-back {
+  font-size: 13px;
+  color: var(--accent);
+  text-decoration: none;
+}
+body.legal-standalone-page .legal-body {
+  max-height: none;
+  overflow: visible;
+}
+
 /* ---------- 主內容 ---------- */
 .content { flex: 1; padding: 28px 34px 60px; max-width: 1200px; }
 
@@ -459,6 +568,14 @@ body.nav-open { overflow: hidden; }
     border-bottom: 1px solid var(--border);
   }
 
+  html.cnc-native-app .mobile-header {
+    padding-top: calc(10px + var(--app-safe-top));
+    margin-left: calc(-1 * var(--app-safe-left));
+    margin-right: calc(-1 * var(--app-safe-right));
+    padding-left: calc(14px + var(--app-safe-left));
+    padding-right: calc(14px + var(--app-safe-right));
+  }
+
   .mobile-menu-btn,
   .mobile-icon-btn {
     flex-shrink: 0;
@@ -522,6 +639,12 @@ body.nav-open { overflow: hidden; }
     padding-bottom: env(safe-area-inset-bottom);
   }
 
+  html.cnc-native-app .sidebar {
+    top: var(--app-safe-top);
+    height: calc(100dvh - var(--app-safe-top) - var(--app-safe-bottom));
+    padding-bottom: 12px;
+  }
+
   body.nav-open .sidebar { transform: translateX(0); }
 
   .brand {
@@ -565,6 +688,15 @@ body.nav-open { overflow: hidden; }
     max-width: none;
     padding: 14px 14px 24px;
     padding-bottom: max(24px, env(safe-area-inset-bottom));
+  }
+
+  html.cnc-native-app .content {
+    padding-bottom: calc(24px + var(--app-safe-bottom));
+  }
+
+  html.cnc-native-app .inquiry-fab {
+    bottom: calc(14px + var(--app-safe-bottom));
+    right: calc(14px + var(--app-safe-right));
   }
 
   .panel-header {
@@ -740,8 +872,17 @@ body.nav-open { overflow: hidden; }
 .card.scheme-b { border-top: 3px solid var(--green); }
 
 /* ---------- 表單 ---------- */
-.field { margin-bottom: 14px; flex: 1; }
-.field-row { display: flex; gap: 14px; }
+.field { margin-bottom: 14px; flex: 1; min-width: 0; }
+.field-row { display: flex; gap: 14px; min-width: 0; }
+
+/* 參數對比：由 app.js 填入欄位，欄位排版交 CSS（勿用 inline grid） */
+.compare-inputs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 14px;
+  min-width: 0;
+}
+.compare-inputs .field { margin-bottom: 14px; }
 
 .field label {
   display: block;
@@ -882,6 +1023,7 @@ button.btn-secondary:hover { background: rgba(79, 142, 247, 0.28); }
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 10px;
+  min-width: 0;
 }
 
 .result-item {
@@ -900,6 +1042,8 @@ button.btn-secondary:hover { background: rgba(79, 142, 247, 0.28); }
   font-size: 20px;
   font-weight: 700;
   color: var(--text);
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .result-item.primary .rvalue { color: var(--accent); }
@@ -1302,8 +1446,15 @@ tr.row-highlight { background: var(--accent-soft); }
 .roi-flat { padding: 12px 4px; font-size: 13px; color: var(--text-dim); }
 
 /* ---- G-code 產生器 ---- */
-.gcode-out-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
-.gcode-out-head h3 { margin: 0; }
+.gcode-out-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.gcode-out-head h3 { margin: 0; flex: 1 1 100%; }
 .gcode-out {
   width: 100%;
   min-height: 380px;
@@ -1320,3 +1471,101 @@ tr.row-highlight { background: var(--accent-soft); }
   overflow: auto;
 }
 .gcode-out:focus { border-color: var(--accent); outline: none; }
+
+/* ---------- iPhone / 窄屏（含橫向 >768px） ---------- */
+@media (max-width: 932px) {
+  .content {
+    max-width: 100%;
+    overflow-x: clip;
+  }
+
+  .card,
+  .tab-panel,
+  .grid-2 {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .field-row {
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .results {
+    grid-template-columns: 1fr;
+  }
+
+  .compare-inputs {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .roi-inputs {
+    grid-template-columns: 1fr;
+  }
+
+  .roi-save-txt {
+    min-width: 0;
+  }
+
+  .gcode-out-head .btn-secondary {
+    flex: 1 1 calc(50% - 5px);
+    justify-content: center;
+  }
+
+  .seg {
+    flex-wrap: wrap;
+    overflow-x: visible;
+    max-width: 100%;
+  }
+
+  .seg-btn {
+    flex: 1 1 auto;
+    min-width: 0;
+    white-space: normal;
+    line-height: 1.3;
+    text-align: center;
+  }
+
+  .table-wrap {
+    max-width: 100%;
+  }
+
+  .table-wrap table {
+    font-size: 12px;
+  }
+
+  th, td {
+    padding: 7px 8px;
+    white-space: normal;
+    word-break: break-word;
+  }
+
+  thead th {
+    font-size: 10px;
+  }
+}
+
+@media (max-width: 430px) {
+  .content {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .card {
+    padding: 14px 12px;
+  }
+
+  .result-item .rvalue {
+    font-size: 17px;
+  }
+
+  .seg-btn {
+    font-size: 11px;
+    padding: 8px 8px;
+  }
+
+  .gcode-out-head .btn-secondary {
+    flex: 1 1 100%;
+  }
+}

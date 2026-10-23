@@ -12,3 +12,10 @@ backups/*.zip
 
 # 備份腳本執行記錄
 scripts/.last-backup
+
+# Xcode 個人設定
+xcuserdata/
+
+# iOS 包內網頁資源（由 scripts/sync-ios-assets.sh 產生）
+ios/CNCToolkit/WebAssets/*
+!ios/CNCToolkit/WebAssets/.gitkeep
